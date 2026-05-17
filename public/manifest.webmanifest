@@ -1,0 +1,19 @@
+{
+  "name": "Absensi & Job Order Teknisi",
+  "short_name": "Absensi Teknisi",
+  "description": "Aplikasi absensi pagi, job order teknisi, GPS, foto pekerjaan, rekap Google Sheet, dan notifikasi Telegram.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f4f6f8",
+  "theme_color": "#2563eb",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
