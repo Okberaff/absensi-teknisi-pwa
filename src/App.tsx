@@ -68,8 +68,10 @@ type Order = {
   keteranganKendala?: string;
 };
 
-const GOOGLE_SCRIPT_URL : string = "https://script.google.com/macros/s/AKfycbxYIPOPCejUNTaAF1k7URM-NJsGlC9037YeK-1EzbfsEcqlEZG-4c8966QWDWYXDfE7VQ/exec";
-const API_TOKEN = "";
+const GOOGLE_SCRIPT_URL_VALUE =
+  "https://script.google.com/macros/s/AKfycbxYIPOPCejUNTaAF1k7URM-NJsGlC9037YeK-1EzbfsEcqlEZG-4c8966QWDWYXDfE7VQ/exec";
+
+const GOOGLE_SCRIPT_URL: string = GOOGLE_SCRIPT_URL_VALUE;
 
 // Login user diambil dari Google Sheet USERS melalui Apps Script.
 type LoginUser = {
