@@ -1,33 +1,21 @@
-<script>
-  if ("serviceWorker" in navigator) {
-    window.addEventListener("load", function () {
-      navigator.serviceWorker
-        .register("/sw.js")
-        .then(function (registration) {
-          console.log("Service Worker aktif");
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
 
-          // Cek update otomatis saat aplikasi dibuka.
-          registration.update();
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="manifest" href="/manifest.webmanifest" />
 
-          // Kalau ada service worker baru, langsung reload sekali.
-          registration.addEventListener("updatefound", function () {
-            const newWorker = registration.installing;
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#2563eb" />
+    <meta name="description" content="Aplikasi Absensi & Job Order Teknisi" />
 
-            if (!newWorker) return;
+    <title>Absensi & Job Order Teknisi</title>
+  </head>
 
-            newWorker.addEventListener("statechange", function () {
-              if (
-                newWorker.state === "activated" &&
-                navigator.serviceWorker.controller
-              ) {
-                window.location.reload();
-              }
-            });
-          });
-        })
-        .catch(function (error) {
-          console.log("Service Worker gagal:", error);
-        });
-    });
-  }
-</script>
+  <body>
+    <div id="root"></div>
+
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
