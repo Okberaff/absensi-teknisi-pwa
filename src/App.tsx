@@ -2170,7 +2170,7 @@ export default function App() {
                         onChange={(e) =>
                           updateKeteranganKendala(order.noWo, e.target.value)
                         }
-                        placeholder="Contoh: kabel putus, ODP tidak bisa dibuka, redaman tinggi, perangkat rusak"
+                        placeholder=
                       />
 
                       <label>Upload Foto Kendala</label>
