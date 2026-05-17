@@ -2137,7 +2137,7 @@ export default function App() {
                         onChange={(e) =>
                           updateKeteranganPending(order.noWo, e.target.value)
                         }
-                        placeholder="Contoh: menunggu material, akses belum dibuka, customer reschedule"
+                        placeholder=""
                       />
 
                       <label>Upload Foto Pending</label>
@@ -2170,7 +2170,8 @@ export default function App() {
                         onChange={(e) =>
                           updateKeteranganKendala(order.noWo, e.target.value)
                         }
-                        placeholder/>
+                        placeholder=""
+                      />
 
                       <label>Upload Foto Kendala</label>
                       <input
