@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { Component, ReactNode, useEffect, useState } from "react";
 import "./index.css";
 
 type Teknisi = {
@@ -191,7 +191,7 @@ function bacaBanyakFoto(files: FileList | null): Promise<FotoItem[]> {
   );
 }
 
-export default function App() {
+function AppContent() {
   const [role, setRole] = useState<Role>("");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [loginNik, setLoginNik] = useState("");
@@ -249,7 +249,6 @@ export default function App() {
 
   useEffect(() => {
     loadTeknisiDariGoogleSheet(true);
-    loadDashboardDariGoogleSheet();
   }, []);
 
 
@@ -322,19 +321,11 @@ export default function App() {
           }
 
           if (!silent) {
-            if (!silent) {
-            if (!silent) {
             alert(`Data teknisi berhasil direfresh. Total: ${result.data.length} teknisi.`);
-          }
-          }
           }
         } else {
           if (!silent) {
-            if (!silent) {
-            if (!silent) {
             alert(result.message || "Data teknisi tidak ditemukan di sheet NAKER.");
-          }
-          }
           }
         }
       } finally {
@@ -351,11 +342,7 @@ export default function App() {
     script.src = `${GOOGLE_SCRIPT_URL}?action=teknisi&callback=${callbackName}`;
     script.onerror = () => {
       if (!silent) {
-        if (!silent) {
-        if (!silent) {
         alert("Gagal mengambil data teknisi. Pastikan Web App sudah deploy versi terbaru dan akses Anyone.");
-      }
-      }
       }
       delete (window as any)[callbackName];
       script.remove();
@@ -364,9 +351,11 @@ export default function App() {
     document.body.appendChild(script);
   }
 
-
-  function loadDashboardDariGoogleSheet() {
+  function loadDashboardDariGoogleSheet(showAlert = false) {
     if (!GOOGLE_SCRIPT_URL) {
+      if (showAlert) {
+        alert("URL Google Apps Script belum diisi di App.tsx.");
+      }
       return;
     }
 
@@ -375,19 +364,74 @@ export default function App() {
       {},
       (result) => {
         if (result.ok) {
-          if (Array.isArray(result.absensi)) {
-            setAbsensi(result.absensi);
-          }
+          const absensiSheet = Array.isArray(result.absensi) ? result.absensi : [];
+          const orderSheet = Array.isArray(result.orders) ? result.orders : [];
 
-          if (Array.isArray(result.orders)) {
-            setOrders(result.orders);
+          setAbsensi(
+            absensiSheet.map((a: any) => ({
+              tanggal: String(a.tanggal || ""),
+              jam: String(a.jam || ""),
+              teknisi: String(a.teknisi || ""),
+              nik: String(a.nik || ""),
+              serviceArea: String(a.serviceArea || ""),
+              status: String(a.status || ""),
+              lokasi: String(a.lokasi || ""),
+              catatan: String(a.catatan || ""),
+              fotoSelfie: String(a.fotoSelfie || ""),
+              gpsLat: String(a.gpsLat || ""),
+              gpsLng: String(a.gpsLng || ""),
+              mapUrl: String(a.mapUrl || ""),
+            }))
+          );
+
+          setOrders(
+            orderSheet.map((o: any) => ({
+              tanggal: String(o.tanggal || ""),
+              jamOrder: String(o.jamOrder || ""),
+              noWo: String(o.noWo || ""),
+              odp: String(o.odp || ""),
+              teknisi1: String(o.teknisi1 || ""),
+              nikTeknisi1: String(o.nikTeknisi1 || ""),
+              serviceAreaTeknisi1: String(o.serviceAreaTeknisi1 || ""),
+              telegramChatIdTeknisi1: String(o.telegramChatIdTeknisi1 || ""),
+              teknisi2: String(o.teknisi2 || ""),
+              nikTeknisi2: String(o.nikTeknisi2 || ""),
+              serviceAreaTeknisi2: String(o.serviceAreaTeknisi2 || ""),
+              telegramChatIdTeknisi2: String(o.telegramChatIdTeknisi2 || ""),
+              jenisPekerjaan: String(o.jenisPekerjaan || ""),
+              status: String(o.status || ""),
+              catatan: String(o.catatan || ""),
+              dibuatOleh: String(o.dibuatOleh || ""),
+              nikPembuat: String(o.nikPembuat || ""),
+              rolePembuat: String(o.rolePembuat || ""),
+              jamTerima: String(o.jamTerima || ""),
+              jamBerangkat: String(o.jamBerangkat || ""),
+              jamCheckin: String(o.jamCheckin || ""),
+              checkinLat: String(o.checkinLat || ""),
+              checkinLng: String(o.checkinLng || ""),
+              checkinMapUrl: String(o.checkinMapUrl || ""),
+              jamProses: String(o.jamProses || ""),
+              jamSelesai: String(o.jamSelesai || ""),
+              fotoLapangan: Array.isArray(o.fotoLapangan) ? o.fotoLapangan : [],
+              fotoHasil: Array.isArray(o.fotoHasil) ? o.fotoHasil : [],
+              fotoPending: Array.isArray(o.fotoPending) ? o.fotoPending : [],
+              fotoKendala: Array.isArray(o.fotoKendala) ? o.fotoKendala : [],
+              keteranganPending: String(o.keteranganPending || ""),
+              keteranganKendala: String(o.keteranganKendala || ""),
+            }))
+          );
+
+          if (showAlert) {
+            alert("Data dashboard berhasil dimuat dari Google Sheet.");
           }
-        } else {
-          console.log(result.message || "Gagal load dashboard dari Google Sheet.");
+        } else if (showAlert) {
+          alert(result.message || "Gagal load dashboard dari Google Sheet.");
         }
       },
       () => {
-        console.log("Gagal load dashboard dari Google Sheet.");
+        if (showAlert) {
+          alert("Gagal load dashboard dari Google Sheet.");
+        }
       }
     );
   }
@@ -921,6 +965,11 @@ export default function App() {
   }
 
 
+
+  const orderSaya: Order[] = orders.filter(
+    (o) => o.nikTeknisi1 === teknisiTerpilih.nik || o.nikTeknisi2 === teknisiTerpilih.nik
+  );
+
   const ordersBulanAdmin: Order[] = orders.filter((o) =>
     cocokBulan(o.tanggal, filterBulanAdmin)
   );
@@ -1282,6 +1331,23 @@ export default function App() {
     );
   }
 
+
+  const totalHadirHariIni = absensi.filter(
+    (a) => a.tanggal === hariIni() && ["Hadir", "Standby"].includes(a.status)
+  ).length;
+
+  const totalTelatHariIni = absensi.filter(
+    (a) => a.tanggal === hariIni() && a.status === "Terlambat"
+  ).length;
+
+  const totalOrderAktif = orders.filter(
+    (o) => !["Selesai", "Approved", "Ditolak"].includes(o.status)
+  ).length;
+
+  const totalOrderSelesai = orders.filter(
+    (o) => ["Selesai", "Approved"].includes(o.status)
+  ).length;
+
   function namaUserLogin() {
     if (currentUser?.role === "superadmin") {
       return "Super Admin";
@@ -1375,6 +1441,9 @@ export default function App() {
               onClick={() => setTabAdmin("riwayatBulanan")}
             >
               Riwayat Bulanan
+            </button>
+            <button onClick={() => loadDashboardDariGoogleSheet(true)}>
+              Load Dashboard dari Sheet
             </button>
             {currentUser?.role === "superadmin" && (
               <button
@@ -2370,5 +2439,62 @@ export default function App() {
         </>
       )}
     </div>
+  );
+}
+
+type ErrorBoundaryProps = {
+  children: ReactNode;
+};
+
+type ErrorBoundaryState = {
+  hasError: boolean;
+  message: string;
+};
+
+class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  constructor(props: ErrorBoundaryProps) {
+    super(props);
+    this.state = {
+      hasError: false,
+      message: "",
+    };
+  }
+
+  static getDerivedStateFromError(error: unknown) {
+    return {
+      hasError: true,
+      message: error instanceof Error ? error.message : String(error),
+    };
+  }
+
+  componentDidCatch(error: unknown) {
+    console.error("Aplikasi error:", error);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="container">
+          <div className="card">
+            <h2>Aplikasi gagal dimuat</h2>
+            <p>
+              Ada error di browser. Pesan error:
+            </p>
+            <pre>{this.state.message}</pre>
+            <button onClick={() => window.location.reload()}>Reload</button>
+          </div>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
+export default function App() {
+  return (
+    <ErrorBoundary>
+      <AppContent />
+    </ErrorBoundary>
   );
 }
