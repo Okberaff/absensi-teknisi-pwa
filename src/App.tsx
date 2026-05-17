@@ -2170,8 +2170,7 @@ export default function App() {
                         onChange={(e) =>
                           updateKeteranganKendala(order.noWo, e.target.value)
                         }
-                        placeholder=
-                      />
+                        placeholder/>
 
                       <label>Upload Foto Kendala</label>
                       <input
