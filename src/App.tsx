@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import './index.css';
+import { useEffect, useState } from "react";
+import "./index.css";
 
 type Teknisi = {
   id: number;
@@ -68,147 +68,40 @@ type Order = {
   keteranganKendala?: string;
 };
 
-// Paste URL Web App dari Google Apps Script di sini.
-// Contoh: const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxxxx/exec";
-const GOOGLE_SCRIPT_URL =
-  'https://script.google.com/macros/s/AKfycbxYIPOPCejUNTaAF1k7URM-NJsGlC9037YeK-1EzbfsEcqlEZG-4c8966QWDWYXDfE7VQ/exec';
-const API_TOKEN = '';
+const GOOGLE_SCRIPT_URL : string = "https://script.google.com/macros/s/AKfycbxYIPOPCejUNTaAF1k7URM-NJsGlC9037YeK-1EzbfsEcqlEZG-4c8966QWDWYXDfE7VQ/exec";
+const API_TOKEN = "";
 
 // Login user diambil dari Google Sheet USERS melalui Apps Script.
 type LoginUser = {
-  role: 'superadmin' | 'admin' | 'teknisi';
+  role: "superadmin" | "admin" | "teknisi";
   nik: string;
   nama: string;
 };
 
+type Role = "" | "admin" | "teknisi";
+type TabAdmin = "dashboard" | "order" | "teknisi" | "rekap" | "riwayatBulanan";
+type TabTeknisi = "absen" | "order" | "riwayat";
+
 const teknisiAwal: Teknisi[] = [
-  {
-    id: 1,
-    nik: '16070476',
-    nama: 'HAFIZ MAULANA',
-    serviceArea: '',
-    telegramChatId: '',
-  },
-  {
-    id: 2,
-    nik: '16984756',
-    nama: 'VERRY ANDISTA',
-    serviceArea: '',
-    telegramChatId: '',
-  },
-  {
-    id: 3,
-    nik: '16995598',
-    nama: 'ABDUL MAJID',
-    serviceArea: '',
-    telegramChatId: '',
-  },
-  {
-    id: 4,
-    nik: '16995697',
-    nama: 'M RAMLI TEDDY SISWOYO',
-    serviceArea: 'Sukaramai',
-    telegramChatId: '',
-  },
-  {
-    id: 5,
-    nik: '16014242',
-    nama: 'MHD FAUZAN ARZAD',
-    serviceArea: 'Sukaramai',
-    telegramChatId: '',
-  },
-  {
-    id: 6,
-    nik: '16942756',
-    nama: 'M MUKLAS',
-    serviceArea: 'Lubuk Pakam',
-    telegramChatId: '',
-  },
-  {
-    id: 7,
-    nik: '16070276',
-    nama: 'NAUFAL NAWARUDDIN',
-    serviceArea: 'Lubuk Pakam',
-    telegramChatId: '',
-  },
-  {
-    id: 8,
-    nik: '25960231',
-    nama: 'CHICCO PARYOGO',
-    serviceArea: 'Binjai',
-    telegramChatId: '',
-  },
-  {
-    id: 9,
-    nik: '25930189',
-    nama: 'BATARA SIMSON SIMANJUNTAK',
-    serviceArea: 'Binjai',
-    telegramChatId: '',
-  },
-  {
-    id: 10,
-    nik: '16953263',
-    nama: 'YUDHA RAKA SIWI',
-    serviceArea: 'Langsa',
-    telegramChatId: '',
-  },
-  {
-    id: 11,
-    nik: '16820176',
-    nama: 'IRWANTO',
-    serviceArea: 'Langsa',
-    telegramChatId: '',
-  },
-  {
-    id: 12,
-    nik: '16011092',
-    nama: 'Muhammad ikram',
-    serviceArea: '',
-    telegramChatId: '',
-  },
-  {
-    id: 13,
-    nik: '16023094',
-    nama: 'KHEMAL PASHA ADITIA',
-    serviceArea: '',
-    telegramChatId: '',
-  },
-  {
-    id: 14,
-    nik: 'NO NIK',
-    nama: 'MUHAMMAD RISKI AMANDA',
-    serviceArea: '',
-    telegramChatId: '',
-  },
-  {
-    id: 15,
-    nik: 'NO NIK',
-    nama: 'FAJAR ADNAN',
-    serviceArea: '',
-    telegramChatId: '',
-  },
-  {
-    id: 16,
-    nik: 'NO NIK',
-    nama: 'IMMANUEL',
-    serviceArea: '',
-    telegramChatId: '',
-  },
-  { id: 17, nik: 'NO NIK', nama: 'DAFFA', serviceArea: '', telegramChatId: '' },
-  {
-    id: 18,
-    nik: '16932577',
-    nama: 'DAVIT MANUMPAK KRISTIAN SINAGA',
-    serviceArea: '',
-    telegramChatId: '',
-  },
-  {
-    id: 19,
-    nik: '16964292',
-    nama: 'ERIK TAKDISUSILO MANALU',
-    serviceArea: '',
-    telegramChatId: '',
-  },
+  { id: 1, nik: "16070476", nama: "HAFIZ MAULANA", serviceArea: "" , telegramChatId: "" },
+  { id: 2, nik: "16984756", nama: "VERRY ANDISTA", serviceArea: "" , telegramChatId: "" },
+  { id: 3, nik: "16995598", nama: "ABDUL MAJID", serviceArea: "" , telegramChatId: "" },
+  { id: 4, nik: "16995697", nama: "M RAMLI TEDDY SISWOYO", serviceArea: "Sukaramai" , telegramChatId: "" },
+  { id: 5, nik: "16014242", nama: "MHD FAUZAN ARZAD", serviceArea: "Sukaramai" , telegramChatId: "" },
+  { id: 6, nik: "16942756", nama: "M MUKLAS", serviceArea: "Lubuk Pakam" , telegramChatId: "" },
+  { id: 7, nik: "16070276", nama: "NAUFAL NAWARUDDIN", serviceArea: "Lubuk Pakam" , telegramChatId: "" },
+  { id: 8, nik: "25960231", nama: "CHICCO PARYOGO", serviceArea: "Binjai" , telegramChatId: "" },
+  { id: 9, nik: "25930189", nama: "BATARA SIMSON SIMANJUNTAK", serviceArea: "Binjai" , telegramChatId: "" },
+  { id: 10, nik: "16953263", nama: "YUDHA RAKA SIWI", serviceArea: "Langsa" , telegramChatId: "" },
+  { id: 11, nik: "16820176", nama: "IRWANTO", serviceArea: "Langsa" , telegramChatId: "" },
+  { id: 12, nik: "16011092", nama: "Muhammad ikram", serviceArea: "" , telegramChatId: "" },
+  { id: 13, nik: "16023094", nama: "KHEMAL PASHA ADITIA", serviceArea: "" , telegramChatId: "" },
+  { id: 14, nik: "NO NIK", nama: "MUHAMMAD RISKI AMANDA", serviceArea: "" , telegramChatId: "" },
+  { id: 15, nik: "NO NIK", nama: "FAJAR ADNAN", serviceArea: "" , telegramChatId: "" },
+  { id: 16, nik: "NO NIK", nama: "IMMANUEL", serviceArea: "" , telegramChatId: "" },
+  { id: 17, nik: "NO NIK", nama: "DAFFA", serviceArea: "" , telegramChatId: "" },
+  { id: 18, nik: "16932577", nama: "DAVIT MANUMPAK KRISTIAN SINAGA", serviceArea: "" , telegramChatId: "" },
+  { id: 19, nik: "16964292", nama: "ERIK TAKDISUSILO MANALU", serviceArea: "" , telegramChatId: "" },
 ];
 
 function hariIni() {
@@ -216,9 +109,9 @@ function hariIni() {
 }
 
 function jamSekarang() {
-  return new Date().toLocaleTimeString('id-ID', {
-    hour: '2-digit',
-    minute: '2-digit',
+  return new Date().toLocaleTimeString("id-ID", {
+    hour: "2-digit",
+    minute: "2-digit",
   });
 }
 
@@ -245,14 +138,14 @@ function cocokBulan(tanggal: string, bulan: string) {
 }
 
 function csvCell(value: string | undefined) {
-  const text = value || '';
+  const text = value || "";
   return `"${text.replaceAll('"', '""')}"`;
 }
 
 function buatCSV(namaFile: string, header: string, isi: string) {
-  const file = new Blob([header + isi], { type: 'text/csv;charset=utf-8;' });
+  const file = new Blob([header + isi], { type: "text/csv;charset=utf-8;" });
   const url = URL.createObjectURL(file);
-  const a = document.createElement('a');
+  const a = document.createElement("a");
   a.href = url;
   a.download = namaFile;
   a.click();
@@ -282,15 +175,15 @@ function bacaBanyakFoto(files: FileList | null): Promise<FotoItem[]> {
 }
 
 export default function App() {
-  const [role, setRole] = useState('');
+  const [role, setRole] = useState<Role>("");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [loginNik, setLoginNik] = useState('');
-  const [loginPin, setLoginPin] = useState('');
-  const [loginError, setLoginError] = useState('');
+  const [loginNik, setLoginNik] = useState("");
+  const [loginPin, setLoginPin] = useState("");
+  const [loginError, setLoginError] = useState("");
   const [currentUser, setCurrentUser] = useState<LoginUser | null>(null);
 
-  const [tabAdmin, setTabAdmin] = useState('dashboard');
-  const [tabTeknisi, setTabTeknisi] = useState('absen');
+  const [tabAdmin, setTabAdmin] = useState<TabAdmin>("dashboard");
+  const [tabTeknisi, setTabTeknisi] = useState<TabTeknisi>("absen");
   const [filterBulanAdmin, setFilterBulanAdmin] = useState(bulanIni());
   const [filterBulanTeknisi, setFilterBulanTeknisi] = useState(bulanIni());
 
@@ -303,26 +196,26 @@ export default function App() {
   const teknisiTerpilih =
     teknisi.find((t) => t.id === pilihTeknisiId) || teknisi[0];
 
-  const [fotoSelfie, setFotoSelfie] = useState('');
+  const [fotoSelfie, setFotoSelfie] = useState("");
   const [gps, setGps] = useState({
-    lat: '',
-    lng: '',
-    mapUrl: '',
+    lat: "",
+    lng: "",
+    mapUrl: "",
   });
 
   const [formAbsen, setFormAbsen] = useState({
-    status: 'Hadir',
-    lokasi: '',
-    catatan: 'Siap menerima tugas',
+    status: "Hadir",
+    lokasi: "",
+    catatan: "Siap menerima tugas",
   });
 
   const [formOrder, setFormOrder] = useState({
-    noWo: '',
-    odp: '',
+    noWo: "",
+    odp: "",
     teknisi1Id: 1,
     teknisi2Id: 0,
-    jenisPekerjaan: '',
-    catatan: '',
+    jenisPekerjaan: "",
+    catatan: "",
   });
 
   useEffect(() => {
@@ -330,35 +223,26 @@ export default function App() {
   }, []);
 
   function loadTeknisiDariGoogleSheet() {
-    if (
-      !GOOGLE_SCRIPT_URL ||
-      GOOGLE_SCRIPT_URL === 'PASTE_URL_WEB_APP_DI_SINI'
-    ) {
-      alert('URL Google Apps Script belum diisi di App.tsx.');
+    if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL === "PASTE_URL_WEB_APP_DI_SINI") {
+      alert("URL Google Apps Script belum diisi di App.tsx.");
       return;
     }
 
-    const callbackName = 'callbackTeknisi' + Date.now();
+    const callbackName = "callbackTeknisi" + Date.now();
 
     (window as any)[callbackName] = (result: any) => {
       try {
         if (result.ok && Array.isArray(result.data) && result.data.length > 0) {
           setTeknisi(result.data);
 
-          const masihAda = result.data.find(
-            (t: Teknisi) => t.id === pilihTeknisiId
-          );
+          const masihAda = result.data.find((t: Teknisi) => t.id === pilihTeknisiId);
           if (!masihAda) {
             setPilihTeknisiId(result.data[0].id);
           }
 
-          alert(
-            `Data teknisi berhasil direfresh. Total: ${result.data.length} teknisi.`
-          );
+          alert(`Data teknisi berhasil direfresh. Total: ${result.data.length} teknisi.`);
         } else {
-          alert(
-            result.message || 'Data teknisi tidak ditemukan di sheet NAKER.'
-          );
+          alert(result.message || "Data teknisi tidak ditemukan di sheet NAKER.");
         }
       } finally {
         delete (window as any)[callbackName];
@@ -369,13 +253,11 @@ export default function App() {
       }
     };
 
-    const script = document.createElement('script');
+    const script = document.createElement("script");
     script.id = callbackName;
     script.src = `${GOOGLE_SCRIPT_URL}?action=teknisi&callback=${callbackName}`;
     script.onerror = () => {
-      alert(
-        'Gagal mengambil data teknisi. Pastikan Web App sudah deploy versi terbaru dan akses Anyone.'
-      );
+      alert("Gagal mengambil data teknisi. Pastikan Web App sudah deploy versi terbaru dan akses Anyone.");
       delete (window as any)[callbackName];
       script.remove();
     };
@@ -396,7 +278,7 @@ export default function App() {
 
   function ambilGPS() {
     if (!navigator.geolocation) {
-      alert('GPS tidak didukung di browser ini.');
+      alert("GPS tidak didukung di browser ini.");
       return;
     }
 
@@ -407,10 +289,10 @@ export default function App() {
         const mapUrl = `https://www.google.com/maps?q=${lat},${lng}`;
 
         setGps({ lat, lng, mapUrl });
-        alert('GPS berhasil diambil.');
+        alert("GPS berhasil diambil.");
       },
       () => {
-        alert('Gagal mengambil GPS. Pastikan izin lokasi diaktifkan.');
+        alert("Gagal mengambil GPS. Pastikan izin lokasi diaktifkan.");
       },
       {
         enableHighAccuracy: true,
@@ -426,23 +308,23 @@ export default function App() {
     );
 
     if (sudahAbsen) {
-      alert('Teknisi ini sudah absen hari ini.');
+      alert("Teknisi ini sudah absen hari ini.");
       return;
     }
 
     if (!fotoSelfie) {
-      alert('Foto selfie wajib diupload.');
+      alert("Foto selfie wajib diupload.");
       return;
     }
 
     if (!gps.lat || !gps.lng) {
-      alert('GPS wajib diambil terlebih dahulu.');
+      alert("GPS wajib diambil terlebih dahulu.");
       return;
     }
 
-    const statusFinal =
-      ['Hadir', 'Standby'].includes(formAbsen.status) && sudahLewatJam8()
-        ? 'Terlambat'
+    const statusFinal: string =
+      ["Hadir", "Standby"].includes(formAbsen.status) && sudahLewatJam8()
+        ? "Terlambat"
         : formAbsen.status;
 
     const data: Absensi = {
@@ -462,25 +344,25 @@ export default function App() {
 
     setAbsensi([data, ...absensi]);
     setFormAbsen({
-      status: 'Hadir',
-      lokasi: '',
-      catatan: 'Siap menerima tugas',
+      status: "Hadir",
+      lokasi: "",
+      catatan: "Siap menerima tugas",
     });
-    setFotoSelfie('');
-    setGps({ lat: '', lng: '', mapUrl: '' });
+    setFotoSelfie("");
+    setGps({ lat: "", lng: "", mapUrl: "" });
 
-    alert('Absensi berhasil dikirim.');
+    alert("Absensi berhasil dikirim.");
   }
 
   async function buatOrder() {
     if (!formOrder.noWo || !formOrder.odp || !formOrder.jenisPekerjaan) {
-      alert('No. WO, ODP, dan Jenis Pekerjaan wajib diisi.');
+      alert("No. WO, ODP, dan Jenis Pekerjaan wajib diisi.");
       return;
     }
 
     const noWoSudahAda = orders.find((o) => o.noWo === formOrder.noWo);
     if (noWoSudahAda) {
-      alert('No. WO ini sudah pernah dibuat.');
+      alert("No. WO ini sudah pernah dibuat.");
       return;
     }
 
@@ -488,7 +370,7 @@ export default function App() {
     const t2 = teknisi.find((x) => x.id === Number(formOrder.teknisi2Id));
 
     if (!t1) {
-      alert('Teknisi 1 wajib dipilih.');
+      alert("Teknisi 1 wajib dipilih.");
       return;
     }
 
@@ -504,44 +386,41 @@ export default function App() {
       serviceAreaTeknisi1: t1.serviceArea,
       telegramChatIdTeknisi1: t1.telegramChatId,
 
-      teknisi2: t2 ? t2.nama : '',
-      nikTeknisi2: t2 ? t2.nik : '',
-      serviceAreaTeknisi2: t2 ? t2.serviceArea : '',
-      telegramChatIdTeknisi2: t2 ? t2.telegramChatId : '',
+      teknisi2: t2 ? t2.nama : "",
+      nikTeknisi2: t2 ? t2.nik : "",
+      serviceAreaTeknisi2: t2 ? t2.serviceArea : "",
+      telegramChatIdTeknisi2: t2 ? t2.telegramChatId : "",
 
       jenisPekerjaan: formOrder.jenisPekerjaan,
-      status: 'Baru',
+      status: "Baru",
       catatan: formOrder.catatan,
 
       fotoLapangan: [],
       fotoHasil: [],
       fotoPending: [],
       fotoKendala: [],
-      keteranganPending: '',
-      keteranganKendala: '',
+      keteranganPending: "",
+      keteranganKendala: "",
     };
 
     setOrders([data, ...orders]);
 
     setFormOrder({
-      noWo: '',
-      odp: '',
+      noWo: "",
+      odp: "",
       teknisi1Id: 1,
       teknisi2Id: 0,
-      jenisPekerjaan: '',
-      catatan: '',
+      jenisPekerjaan: "",
+      catatan: "",
     });
 
     await kirimNotifOrderTelegram(data);
 
-    alert('Order berhasil dibuat.');
+    alert("Order berhasil dibuat.");
   }
 
   async function kirimNotifOrderTelegram(order: Order) {
-    if (
-      !GOOGLE_SCRIPT_URL ||
-      GOOGLE_SCRIPT_URL === 'PASTE_URL_WEB_APP_DI_SINI'
-    ) {
+    if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL === "PASTE_URL_WEB_APP_DI_SINI") {
       return;
     }
 
@@ -551,40 +430,37 @@ export default function App() {
 
     try {
       await fetch(GOOGLE_SCRIPT_URL, {
-        method: 'POST',
-        mode: 'no-cors',
+        method: "POST",
+        mode: "no-cors",
         headers: {
-          'Content-Type': 'text/plain;charset=utf-8',
+          "Content-Type": "text/plain;charset=utf-8",
         },
         body: JSON.stringify({
           token: API_TOKEN,
-          type: 'notify_order',
+          type: "notify_order",
           data: order,
         }),
       });
     } catch (error) {
-      console.log('Gagal kirim notif Telegram', error);
+      console.log("Gagal kirim notif Telegram", error);
     }
   }
 
   async function kirimNotifStatusTelegram(order: Order, status: string) {
-    if (
-      !GOOGLE_SCRIPT_URL ||
-      GOOGLE_SCRIPT_URL === 'PASTE_URL_WEB_APP_DI_SINI'
-    ) {
+    if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL === "PASTE_URL_WEB_APP_DI_SINI") {
       return;
     }
 
     try {
       await fetch(GOOGLE_SCRIPT_URL, {
-        method: 'POST',
-        mode: 'no-cors',
+        method: "POST",
+        mode: "no-cors",
         headers: {
-          'Content-Type': 'text/plain;charset=utf-8',
+          "Content-Type": "text/plain;charset=utf-8",
         },
         body: JSON.stringify({
           token: API_TOKEN,
-          type: 'notify_status',
+          type: "notify_status",
           data: {
             order,
             status,
@@ -592,20 +468,17 @@ export default function App() {
         }),
       });
     } catch (error) {
-      console.log('Gagal kirim notif status Telegram', error);
+      console.log("Gagal kirim notif status Telegram", error);
     }
   }
 
-  function adminSetAbsensi(
-    teknisiData: Teknisi,
-    status: 'Tanpa Keterangan' | 'Libur'
-  ) {
+  function adminSetAbsensi(teknisiData: Teknisi, status: "Tanpa Keterangan" | "Libur") {
     const sudahAda = absensi.find(
       (a) => a.tanggal === hariIni() && a.nik === teknisiData.nik
     );
 
     if (sudahAda) {
-      alert('Teknisi ini sudah punya status absensi hari ini.');
+      alert("Teknisi ini sudah punya status absensi hari ini.");
       return;
     }
 
@@ -616,15 +489,15 @@ export default function App() {
       nik: teknisiData.nik,
       serviceArea: teknisiData.serviceArea,
       status,
-      lokasi: '',
+      lokasi: "",
       catatan:
-        status === 'Tanpa Keterangan'
-          ? 'Diinput admin: teknisi belum absen sampai jam 12:00'
-          : 'Diinput admin: teknisi libur',
-      fotoSelfie: '',
-      gpsLat: '',
-      gpsLng: '',
-      mapUrl: '',
+        status === "Tanpa Keterangan"
+          ? "Diinput admin: teknisi belum absen sampai jam 12:00"
+          : "Diinput admin: teknisi libur",
+      fotoSelfie: "",
+      gpsLat: "",
+      gpsLng: "",
+      mapUrl: "",
     };
 
     setAbsensi([data, ...absensi]);
@@ -639,10 +512,10 @@ export default function App() {
 
         const tambahan: Partial<Order> = {};
 
-        if (status === 'Diterima') tambahan.jamTerima = jamSekarang();
-        if (status === 'Berangkat') tambahan.jamBerangkat = jamSekarang();
-        if (status === 'Proses') tambahan.jamProses = jamSekarang();
-        if (status === 'Selesai') tambahan.jamSelesai = jamSekarang();
+        if (status === "Diterima") tambahan.jamTerima = jamSekarang();
+        if (status === "Berangkat") tambahan.jamBerangkat = jamSekarang();
+        if (status === "Proses") tambahan.jamProses = jamSekarang();
+        if (status === "Selesai") tambahan.jamSelesai = jamSekarang();
 
         const updatedOrder = { ...order, status, ...tambahan };
         updatedOrderForNotif = updatedOrder;
@@ -651,17 +524,14 @@ export default function App() {
       })
     );
 
-    if (
-      updatedOrderForNotif &&
-      ['Berangkat', 'Proses', 'Selesai'].includes(status)
-    ) {
+    if (updatedOrderForNotif && ["Berangkat", "Proses", "Selesai"].includes(status)) {
       kirimNotifStatusTelegram(updatedOrderForNotif, status);
     }
   }
 
   function checkinOrder(noWo: string) {
     if (!navigator.geolocation) {
-      alert('GPS tidak didukung di browser ini.');
+      alert("GPS tidak didukung di browser ini.");
       return;
     }
 
@@ -676,7 +546,7 @@ export default function App() {
             order.noWo === noWo
               ? {
                   ...order,
-                  status: 'Check-in',
+                  status: "Check-in",
                   jamCheckin: jamSekarang(),
                   checkinLat: lat,
                   checkinLng: lng,
@@ -686,10 +556,10 @@ export default function App() {
           )
         );
 
-        alert('Check-in berhasil. Titik koordinat sudah tersimpan.');
+        alert("Check-in berhasil. Titik koordinat sudah tersimpan.");
       },
       () => {
-        alert('Gagal mengambil GPS. Pastikan izin lokasi diaktifkan.');
+        alert("Gagal mengambil GPS. Pastikan izin lokasi diaktifkan.");
       },
       {
         enableHighAccuracy: true,
@@ -777,16 +647,16 @@ export default function App() {
     }
 
     if (!order.keteranganPending || !order.keteranganPending.trim()) {
-      alert('Keterangan pending wajib diisi.');
+      alert("Keterangan pending wajib diisi.");
       return;
     }
 
     if (!order.fotoPending || order.fotoPending.length === 0) {
-      alert('Foto pending wajib diupload minimal 1 foto.');
+      alert("Foto pending wajib diupload minimal 1 foto.");
       return;
     }
 
-    updateStatus(noWo, 'Pending');
+    updateStatus(noWo, "Pending");
   }
 
   function updateKeteranganKendala(noWo: string, value: string) {
@@ -829,16 +699,16 @@ export default function App() {
     }
 
     if (!order.keteranganKendala || !order.keteranganKendala.trim()) {
-      alert('Keterangan kendala wajib diisi.');
+      alert("Keterangan kendala wajib diisi.");
       return;
     }
 
     if (!order.fotoKendala || order.fotoKendala.length === 0) {
-      alert('Foto kendala wajib diupload minimal 1 foto.');
+      alert("Foto kendala wajib diupload minimal 1 foto.");
       return;
     }
 
-    updateStatus(noWo, 'Kendala');
+    updateStatus(noWo, "Kendala");
   }
 
   function setOrderSelesai(noWo: string) {
@@ -849,18 +719,16 @@ export default function App() {
     }
 
     if (!order.fotoHasil || order.fotoHasil.length === 0) {
-      alert(
-        'Foto hasil pekerjaan wajib diupload minimal 1 foto sebelum order diselesaikan.'
-      );
+      alert("Foto hasil pekerjaan wajib diupload minimal 1 foto sebelum order diselesaikan.");
       return;
     }
 
-    updateStatus(noWo, 'Selesai');
+    updateStatus(noWo, "Selesai");
   }
 
   function exportAbsensi() {
     const header =
-      'Tanggal,Jam,NIK,Teknisi,Service Area,Status,Lokasi Manual,Latitude,Longitude,Google Maps,Foto Selfie,Catatan\n';
+      "Tanggal,Jam,NIK,Teknisi,Service Area,Status,Lokasi Manual,Latitude,Longitude,Google Maps,Foto Selfie,Catatan\n";
 
     const isi = absensi
       .map((a) =>
@@ -875,20 +743,20 @@ export default function App() {
           a.gpsLat,
           a.gpsLng,
           a.mapUrl,
-          a.fotoSelfie ? 'Ada' : 'Tidak Ada',
+          a.fotoSelfie ? "Ada" : "Tidak Ada",
           a.catatan,
         ]
           .map(csvCell)
-          .join(',')
+          .join(",")
       )
-      .join('\n');
+      .join("\n");
 
-    buatCSV('rekap-absensi.csv', header, isi);
+    buatCSV("rekap-absensi.csv", header, isi);
   }
 
   function exportOrder() {
     const header =
-      'Tanggal,Jam Order,No WO,ODP,Teknisi 1,NIK Teknisi 1,Service Area Teknisi 1,Teknisi 2,NIK Teknisi 2,Service Area Teknisi 2,Jenis Pekerjaan,Status,Jam Terima,Jam Berangkat,Jam Checkin,Checkin Latitude,Checkin Longitude,Checkin Google Maps,Jam Proses,Jam Selesai,Keterangan Pending,Jumlah Foto Pending,Keterangan Kendala,Jumlah Foto Kendala,Jumlah Foto Lapangan,Jumlah Foto Hasil,Catatan\n';
+      "Tanggal,Jam Order,No WO,ODP,Teknisi 1,NIK Teknisi 1,Service Area Teknisi 1,Teknisi 2,NIK Teknisi 2,Service Area Teknisi 2,Jenis Pekerjaan,Status,Jam Terima,Jam Berangkat,Jam Checkin,Checkin Latitude,Checkin Longitude,Checkin Google Maps,Jam Proses,Jam Selesai,Keterangan Pending,Jumlah Foto Pending,Keterangan Kendala,Jumlah Foto Kendala,Jumlah Foto Lapangan,Jumlah Foto Hasil,Catatan\n";
 
     const isi = orders
       .map((o) =>
@@ -905,54 +773,49 @@ export default function App() {
           o.serviceAreaTeknisi2,
           o.jenisPekerjaan,
           o.status,
-          o.jamTerima || '',
-          o.jamBerangkat || '',
-          o.jamCheckin || '',
-          o.checkinLat || '',
-          o.checkinLng || '',
-          o.checkinMapUrl || '',
-          o.jamProses || '',
-          o.jamSelesai || '',
-          o.keteranganPending || '',
+          o.jamTerima || "",
+          o.jamBerangkat || "",
+          o.jamCheckin || "",
+          o.checkinLat || "",
+          o.checkinLng || "",
+          o.checkinMapUrl || "",
+          o.jamProses || "",
+          o.jamSelesai || "",
+          o.keteranganPending || "",
           String(o.fotoPending.length),
-          o.keteranganKendala || '',
+          o.keteranganKendala || "",
           String(o.fotoKendala.length),
           String(o.fotoLapangan.length),
           String(o.fotoHasil.length),
           o.catatan,
         ]
           .map(csvCell)
-          .join(',')
+          .join(",")
       )
-      .join('\n');
+      .join("\n");
 
-    buatCSV('rekap-order.csv', header, isi);
+    buatCSV("rekap-order.csv", header, isi);
   }
 
-  async function uploadKeGoogleSheet(type: 'absensi' | 'order') {
-    if (
-      !GOOGLE_SCRIPT_URL ||
-      GOOGLE_SCRIPT_URL === 'PASTE_URL_WEB_APP_DI_SINI'
-    ) {
-      alert('URL Google Apps Script belum diisi di App.tsx.');
+  async function uploadKeGoogleSheet(type: "absensi" | "order") {
+    if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL === "PASTE_URL_WEB_APP_DI_SINI") {
+      alert("URL Google Apps Script belum diisi di App.tsx.");
       return;
     }
 
-    const data = type === 'absensi' ? absensi : orders;
+    const data = type === "absensi" ? absensi : orders;
 
     if (data.length === 0) {
-      alert(
-        type === 'absensi' ? 'Belum ada data absensi.' : 'Belum ada data order.'
-      );
+      alert(type === "absensi" ? "Belum ada data absensi." : "Belum ada data order.");
       return;
     }
 
     try {
       await fetch(GOOGLE_SCRIPT_URL, {
-        method: 'POST',
-        mode: 'no-cors',
+        method: "POST",
+        mode: "no-cors",
         headers: {
-          'Content-Type': 'text/plain;charset=utf-8',
+          "Content-Type": "text/plain;charset=utf-8",
         },
         body: JSON.stringify({
           token: API_TOKEN,
@@ -962,12 +825,12 @@ export default function App() {
       });
 
       alert(
-        type === 'absensi'
-          ? 'Absensi dikirim ke Google Sheet. Cek sheet REKAP_ABSENSI.'
-          : 'Order dikirim ke Google Sheet. Cek sheet REKAP_ORDER.'
+        type === "absensi"
+          ? "Absensi dikirim ke Google Sheet. Cek sheet REKAP_ABSENSI."
+          : "Order dikirim ke Google Sheet. Cek sheet REKAP_ORDER."
       );
     } catch (error) {
-      alert('Gagal upload ke Google Sheet: ' + String(error));
+      alert("Gagal upload ke Google Sheet: " + String(error));
     }
   }
 
@@ -978,35 +841,30 @@ export default function App() {
   );
 
   const totalHadirHariIni = absensi.filter(
-    (a) => a.tanggal === hariIni() && ['Hadir', 'Standby'].includes(a.status)
+    (a) => a.tanggal === hariIni() && ["Hadir", "Standby"].includes(a.status)
   ).length;
 
   const totalTelatHariIni = absensi.filter(
-    (a) => a.tanggal === hariIni() && a.status === 'Terlambat'
+    (a) => a.tanggal === hariIni() && a.status === "Terlambat"
   ).length;
 
   const totalOrderAktif = orders.filter(
-    (o) => !['Selesai', 'Approved', 'Ditolak'].includes(o.status)
+    (o) => !["Selesai", "Approved", "Ditolak"].includes(o.status)
   ).length;
 
   const totalOrderSelesai = orders.filter((o) =>
-    ['Selesai', 'Approved'].includes(o.status)
+    ["Selesai", "Approved"].includes(o.status)
   ).length;
 
-  const ordersBulanAdmin = orders.filter((o) =>
-    cocokBulan(o.tanggal, filterBulanAdmin)
-  );
-  const absensiBulanAdmin = absensi.filter((a) =>
-    cocokBulan(a.tanggal, filterBulanAdmin)
-  );
+  const ordersBulanAdmin = orders.filter((o) => cocokBulan(o.tanggal, filterBulanAdmin));
+  const absensiBulanAdmin = absensi.filter((a) => cocokBulan(a.tanggal, filterBulanAdmin));
 
   const ordersBulanTeknisi = orderSaya.filter((o) =>
     cocokBulan(o.tanggal, filterBulanTeknisi)
   );
 
   const absensiBulanTeknisi = absensi.filter(
-    (a) =>
-      a.nik === teknisiTerpilih.nik && cocokBulan(a.tanggal, filterBulanTeknisi)
+    (a) => a.nik === teknisiTerpilih.nik && cocokBulan(a.tanggal, filterBulanTeknisi)
   );
 
   const rekapTeknisiBulanan = teknisi.map((t) => {
@@ -1019,30 +877,21 @@ export default function App() {
     return {
       teknisi: t,
       totalOrder: orderTeknisi.length,
-      selesai: orderTeknisi.filter((o) =>
-        ['Selesai', 'Approved'].includes(o.status)
-      ).length,
-      pending: orderTeknisi.filter((o) => o.status === 'Pending').length,
+      selesai: orderTeknisi.filter((o) => ["Selesai", "Approved"].includes(o.status)).length,
+      pending: orderTeknisi.filter((o) => o.status === "Pending").length,
       aktif: orderTeknisi.filter(
-        (o) =>
-          !['Selesai', 'Approved', 'Ditolak', 'Pending', 'Kendala'].includes(
-            o.status
-          )
+        (o) => !["Selesai", "Approved", "Ditolak", "Pending", "Kendala"].includes(o.status)
       ).length,
-      hadir: absensiTeknisi.filter((a) =>
-        ['Hadir', 'Standby'].includes(a.status)
-      ).length,
-      telat: absensiTeknisi.filter((a) => a.status === 'Terlambat').length,
-      tanpaKeterangan: absensiTeknisi.filter(
-        (a) => a.status === 'Tanpa Keterangan'
-      ).length,
-      libur: absensiTeknisi.filter((a) => a.status === 'Libur').length,
+      hadir: absensiTeknisi.filter((a) => ["Hadir", "Standby"].includes(a.status)).length,
+      telat: absensiTeknisi.filter((a) => a.status === "Terlambat").length,
+      tanpaKeterangan: absensiTeknisi.filter((a) => a.status === "Tanpa Keterangan").length,
+      libur: absensiTeknisi.filter((a) => a.status === "Libur").length,
     };
   });
 
   function exportRiwayatBulananAdmin() {
     const header =
-      'Bulan,NIK,Teknisi,Service Area,Total Order,Selesai,Pending,Aktif,Hadir/Standby,Terlambat,Tanpa Keterangan,Libur\n';
+      "Bulan,NIK,Teknisi,Service Area,Total Order,Selesai,Pending,Aktif,Hadir/Standby,Terlambat,Tanpa Keterangan,Libur\n";
 
     const isi = rekapTeknisiBulanan
       .map((r) =>
@@ -1061,19 +910,16 @@ export default function App() {
           String(r.libur),
         ]
           .map(csvCell)
-          .join(',')
+          .join(",")
       )
-      .join('\n');
+      .join("\n");
 
     buatCSV(`riwayat-bulanan-${filterBulanAdmin}.csv`, header, isi);
   }
 
   async function uploadRiwayatBulananAdmin() {
-    if (
-      !GOOGLE_SCRIPT_URL ||
-      GOOGLE_SCRIPT_URL === 'PASTE_URL_WEB_APP_DI_SINI'
-    ) {
-      alert('URL Google Apps Script belum diisi di App.tsx.');
+    if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL === "PASTE_URL_WEB_APP_DI_SINI") {
+      alert("URL Google Apps Script belum diisi di App.tsx.");
       return;
     }
 
@@ -1094,32 +940,27 @@ export default function App() {
 
     try {
       await fetch(GOOGLE_SCRIPT_URL, {
-        method: 'POST',
-        mode: 'no-cors',
+        method: "POST",
+        mode: "no-cors",
         headers: {
-          'Content-Type': 'text/plain;charset=utf-8',
+          "Content-Type": "text/plain;charset=utf-8",
         },
         body: JSON.stringify({
           token: API_TOKEN,
-          type: 'riwayat_bulanan',
+          type: "riwayat_bulanan",
           data,
         }),
       });
 
-      alert(
-        'Riwayat bulanan dikirim ke Google Sheet. Cek sheet RIWAYAT_BULANAN.'
-      );
+      alert("Riwayat bulanan dikirim ke Google Sheet. Cek sheet RIWAYAT_BULANAN.");
     } catch (error) {
-      alert('Gagal upload riwayat bulanan: ' + String(error));
+      alert("Gagal upload riwayat bulanan: " + String(error));
     }
   }
 
   function loginUser() {
-    if (
-      !GOOGLE_SCRIPT_URL ||
-      GOOGLE_SCRIPT_URL === 'PASTE_URL_WEB_APP_DI_SINI'
-    ) {
-      setLoginError('URL Google Apps Script belum diisi di App.tsx.');
+    if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL === "PASTE_URL_WEB_APP_DI_SINI") {
+      setLoginError("URL Google Apps Script belum diisi di App.tsx.");
       return;
     }
 
@@ -1127,43 +968,41 @@ export default function App() {
     const pin = loginPin.trim();
 
     if (!nik) {
-      setLoginError('NIK wajib diisi.');
+      setLoginError("NIK wajib diisi.");
       return;
     }
 
-    const callbackName = 'callbackLogin' + Date.now();
+    const callbackName = "callbackLogin" + Date.now();
 
     (window as any)[callbackName] = (result: any) => {
       try {
         if (!result.ok) {
-          setLoginError(result.message || 'Login gagal.');
+          setLoginError(result.message || "Login gagal.");
           return;
         }
 
         const user = result.user as LoginUser;
 
-        if (user.role === 'teknisi') {
-          const t = teknisi.find(
-            (x) => String(x.nik).trim() === String(user.nik).trim()
-          );
+        if (user.role === "teknisi") {
+          const t = teknisi.find((x) => String(x.nik).trim() === String(user.nik).trim());
 
           if (!t) {
             setLoginError(
-              'NIK berhasil login, tapi tidak ditemukan di data teknisi. Coba refresh data NAKER.'
+              "NIK berhasil login, tapi tidak ditemukan di data teknisi. Coba refresh data NAKER."
             );
             return;
           }
 
           setPilihTeknisiId(t.id);
-          setRole('teknisi');
+          setRole("teknisi");
         } else {
-          setRole('admin');
+          setRole("admin");
         }
 
         setCurrentUser(user);
         setIsLoggedIn(true);
-        setLoginError('');
-        setLoginPin('');
+        setLoginError("");
+        setLoginPin("");
       } finally {
         delete (window as any)[callbackName];
         const script = document.getElementById(callbackName);
@@ -1173,7 +1012,7 @@ export default function App() {
       }
     };
 
-    const script = document.createElement('script');
+    const script = document.createElement("script");
     script.id = callbackName;
     script.src =
       `${GOOGLE_SCRIPT_URL}?action=login` +
@@ -1182,9 +1021,7 @@ export default function App() {
       `&callback=${callbackName}`;
 
     script.onerror = () => {
-      setLoginError(
-        'Gagal login. Pastikan Web App sudah deploy versi terbaru.'
-      );
+      setLoginError("Gagal login. Pastikan Web App sudah deploy versi terbaru.");
       delete (window as any)[callbackName];
       script.remove();
     };
@@ -1193,30 +1030,40 @@ export default function App() {
   }
 
   function logout() {
-    setRole('');
+    setRole("");
     setIsLoggedIn(false);
-    setLoginNik('');
-    setLoginPin('');
-    setLoginError('');
+    setLoginNik("");
+    setLoginPin("");
+    setLoginError("");
     setCurrentUser(null);
-    setTabAdmin('dashboard');
-    setTabTeknisi('absen');
+    setTabAdmin("dashboard");
+    setTabTeknisi("absen");
+  }
+
+  function namaUserLogin() {
+    if (currentUser?.role === "superadmin") {
+      return "Super Admin";
+    }
+
+    if (role === "admin") {
+      return "Admin";
+    }
+
+    return teknisiTerpilih.nama;
   }
 
   return (
     <div className="container">
       <h1>Absensi & Job Order Teknisi</h1>
       <p className="subtitle">
-        MVP absensi pagi, No. WO, ODP, teknisi 1/2, selfie, GPS, foto pekerjaan,
-        dan export rekap.
+        MVP absensi pagi, No. WO, ODP, teknisi 1/2, selfie, GPS, foto pekerjaan, dan export rekap.
       </p>
 
       {!isLoggedIn && (
         <div className="card">
           <h2>Login</h2>
           <p className="subtitle">
-            Teknisi login cukup dengan NIK. Admin/Super Admin login dengan NIK
-            dan PIN dari sheet USERS.
+            Teknisi login cukup dengan NIK. Admin/Super Admin login dengan NIK dan PIN dari sheet USERS.
           </p>
 
           <label>NIK</label>
@@ -1244,17 +1091,11 @@ export default function App() {
         <div className="card">
           <div className="row-between">
             <div>
-              <b>
-                {currentUser?.role === 'superadmin'
-                  ? 'Super Admin'
-                  : role === 'admin'
-                  ? 'Admin'
-                  : teknisiTerpilih.nama}
-              </b>
-              {isLoggedIn && role === 'teknisi' && (
+              <b>{namaUserLogin()}</b>
+              {isLoggedIn && role === "teknisi" && (
                 <>
                   <p>NIK: {teknisiTerpilih.nik}</p>
-                  <p>Service Area: {teknisiTerpilih.serviceArea || '-'}</p>
+                  <p>Service Area: {teknisiTerpilih.serviceArea || "-"}</p>
                 </>
               )}
             </div>
@@ -1263,42 +1104,42 @@ export default function App() {
         </div>
       )}
 
-      {isLoggedIn && role === 'admin' && (
+      {isLoggedIn && role === "admin" && (
         <>
           <div className="tabs">
             <button
-              className={tabAdmin === 'dashboard' ? 'active' : ''}
-              onClick={() => setTabAdmin('dashboard')}
+              className={tabAdmin === "dashboard" ? "active" : ""}
+              onClick={() => setTabAdmin("dashboard")}
             >
               Dashboard
             </button>
             <button
-              className={tabAdmin === 'order' ? 'active' : ''}
-              onClick={() => setTabAdmin('order')}
+              className={tabAdmin === "order" ? "active" : ""}
+              onClick={() => setTabAdmin("order")}
             >
               Buat Order
             </button>
             <button
-              className={tabAdmin === 'teknisi' ? 'active' : ''}
-              onClick={() => setTabAdmin('teknisi')}
+              className={tabAdmin === "teknisi" ? "active" : ""}
+              onClick={() => setTabAdmin("teknisi")}
             >
               Data Teknisi
             </button>
             <button
-              className={tabAdmin === 'rekap' ? 'active' : ''}
-              onClick={() => setTabAdmin('rekap')}
+              className={tabAdmin === "rekap" ? "active" : ""}
+              onClick={() => setTabAdmin("rekap")}
             >
               Rekap
             </button>
             <button
-              className={tabAdmin === 'riwayatBulanan' ? 'active' : ''}
-              onClick={() => setTabAdmin('riwayatBulanan')}
+              className={tabAdmin === "riwayatBulanan" ? "active" : ""}
+              onClick={() => setTabAdmin("riwayatBulanan")}
             >
               Riwayat Bulanan
             </button>
           </div>
 
-          {tabAdmin === 'dashboard' && (
+          {tabAdmin === "dashboard" && (
             <>
               <div className="grid-4">
                 <div className="stat">
@@ -1319,47 +1160,33 @@ export default function App() {
                 </div>
               </div>
 
+
               <div className="card">
                 <h2>Teknisi Belum Absen Hari Ini</h2>
                 {!sudahJam12AtauLebih() && (
                   <p className="info-text">
-                    Admin menentukan status Tanpa Keterangan/Libur setelah jam
-                    12:00.
+                    Admin menentukan status Tanpa Keterangan/Libur setelah jam 12:00.
                   </p>
                 )}
 
                 {teknisi.filter(
-                  (t) =>
-                    !absensi.find(
-                      (a) => a.tanggal === hariIni() && a.nik === t.nik
-                    )
-                ).length === 0 && (
-                  <p>Semua teknisi sudah punya status absensi hari ini.</p>
-                )}
+                  (t) => !absensi.find((a) => a.tanggal === hariIni() && a.nik === t.nik)
+                ).length === 0 && <p>Semua teknisi sudah punya status absensi hari ini.</p>}
 
                 {teknisi
-                  .filter(
-                    (t) =>
-                      !absensi.find(
-                        (a) => a.tanggal === hariIni() && a.nik === t.nik
-                      )
-                  )
+                  .filter((t) => !absensi.find((a) => a.tanggal === hariIni() && a.nik === t.nik))
                   .map((t) => (
                     <div className="item" key={t.id}>
                       <b>{t.nama}</b>
                       <p>NIK: {t.nik}</p>
-                      <p>Service Area: {t.serviceArea || '-'}</p>
+                      <p>Service Area: {t.serviceArea || "-"}</p>
 
                       {sudahJam12AtauLebih() ? (
                         <>
-                          <button
-                            onClick={() =>
-                              adminSetAbsensi(t, 'Tanpa Keterangan')
-                            }
-                          >
+                          <button onClick={() => adminSetAbsensi(t, "Tanpa Keterangan")}>
                             Set Tanpa Keterangan
                           </button>
-                          <button onClick={() => adminSetAbsensi(t, 'Libur')}>
+                          <button onClick={() => adminSetAbsensi(t, "Libur")}>
                             Set Libur
                           </button>
                         </>
@@ -1384,14 +1211,9 @@ export default function App() {
                     </div>
                     <p>ODP: {order.odp}</p>
                     <p>Teknisi 1: {order.teknisi1}</p>
-                    <p>Teknisi 2: {order.teknisi2 || '-'}</p>
+                    <p>Teknisi 2: {order.teknisi2 || "-"}</p>
                     <p>Jenis Pekerjaan: {order.jenisPekerjaan}</p>
-                    <p>
-                      Check-in:{' '}
-                      {order.checkinLat
-                        ? `${order.checkinLat}, ${order.checkinLng}`
-                        : '-'}
-                    </p>
+                    <p>Check-in: {order.checkinLat ? `${order.checkinLat}, ${order.checkinLng}` : "-"}</p>
                     {order.checkinMapUrl && (
                       <p>
                         <a href={order.checkinMapUrl} target="_blank">
@@ -1399,18 +1221,16 @@ export default function App() {
                         </a>
                       </p>
                     )}
-                    <p>Keterangan Pending: {order.keteranganPending || '-'}</p>
+                    <p>Keterangan Pending: {order.keteranganPending || "-"}</p>
                     <p>Foto Pending: {order.fotoPending.length}</p>
-                    <p>Keterangan Kendala: {order.keteranganKendala || '-'}</p>
+                    <p>Keterangan Kendala: {order.keteranganKendala || "-"}</p>
                     <p>Foto Kendala: {order.fotoKendala.length}</p>
                     <p>Foto Lapangan: {order.fotoLapangan.length}</p>
                     <p>Foto Hasil: {order.fotoHasil.length}</p>
-                    <p>Catatan: {order.catatan || '-'}</p>
+                    <p>Catatan: {order.catatan || "-"}</p>
 
-                    {order.status === 'Selesai' && (
-                      <button
-                        onClick={() => updateStatus(order.noWo, 'Approved')}
-                      >
+                    {order.status === "Selesai" && (
+                      <button onClick={() => updateStatus(order.noWo, "Approved")}>
                         Approve Laporan
                       </button>
                     )}
@@ -1420,7 +1240,7 @@ export default function App() {
             </>
           )}
 
-          {tabAdmin === 'order' && (
+          {tabAdmin === "order" && (
             <div className="card">
               <h2>Buat Order Teknisi</h2>
 
@@ -1454,7 +1274,7 @@ export default function App() {
               >
                 {teknisi.map((t) => (
                   <option key={t.id} value={t.id}>
-                    {t.nama} - {t.nik} - {t.serviceArea || '-'}
+                    {t.nama} - {t.nik} - {t.serviceArea || "-"}
                   </option>
                 ))}
               </select>
@@ -1472,7 +1292,7 @@ export default function App() {
                 <option value={0}>Tidak ada teknisi 2</option>
                 {teknisi.map((t) => (
                   <option key={t.id} value={t.id}>
-                    {t.nama} - {t.nik} - {t.serviceArea || '-'}
+                    {t.nama} - {t.nik} - {t.serviceArea || "-"}
                   </option>
                 ))}
               </select>
@@ -1499,14 +1319,12 @@ export default function App() {
             </div>
           )}
 
-          {tabAdmin === 'teknisi' && (
+          {tabAdmin === "teknisi" && (
             <div className="card">
               <h2>Data Teknisi</h2>
-              {currentUser?.role === 'superadmin' && (
+              {currentUser?.role === "superadmin" && (
                 <p className="info-text">
-                  User login dikelola di Google Sheet tab USERS. Super Admin
-                  bisa ubah NIK admin, PIN admin, dan NIK teknisi yang boleh
-                  login di tab tersebut.
+                  User login dikelola di Google Sheet tab USERS. Super Admin bisa ubah NIK admin, PIN admin, dan NIK teknisi yang boleh login di tab tersebut.
                 </p>
               )}
               <button onClick={loadTeknisiDariGoogleSheet}>
@@ -1528,8 +1346,8 @@ export default function App() {
                       <tr key={t.id}>
                         <td>{t.nik}</td>
                         <td>{t.nama}</td>
-                        <td>{t.serviceArea || '-'}</td>
-                        <td>{t.telegramChatId || '-'}</td>
+                        <td>{t.serviceArea || "-"}</td>
+                        <td>{t.telegramChatId || "-"}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -1538,12 +1356,12 @@ export default function App() {
             </div>
           )}
 
-          {tabAdmin === 'rekap' && (
+          {tabAdmin === "rekap" && (
             <>
               <div className="card">
                 <h2>Rekap Absensi</h2>
                 <button onClick={exportAbsensi}>Export Absensi CSV</button>
-                <button onClick={() => uploadKeGoogleSheet('absensi')}>
+                <button onClick={() => uploadKeGoogleSheet("absensi")}>
                   Upload Absensi ke Google Sheet
                 </button>
 
@@ -1559,11 +1377,9 @@ export default function App() {
                       {a.tanggal} {a.jam}
                     </p>
                     <p>NIK: {a.nik}</p>
-                    <p>Service Area: {a.serviceArea || '-'}</p>
-                    <p>Lokasi manual: {a.lokasi || '-'}</p>
-                    <p>
-                      GPS: {a.gpsLat}, {a.gpsLng}
-                    </p>
+                    <p>Service Area: {a.serviceArea || "-"}</p>
+                    <p>Lokasi manual: {a.lokasi || "-"}</p>
+                    <p>GPS: {a.gpsLat}, {a.gpsLng}</p>
                     <p>Catatan: {a.catatan}</p>
 
                     {a.mapUrl && (
@@ -1587,7 +1403,7 @@ export default function App() {
               <div className="card">
                 <h2>Rekap Order</h2>
                 <button onClick={exportOrder}>Export Order CSV</button>
-                <button onClick={() => uploadKeGoogleSheet('order')}>
+                <button onClick={() => uploadKeGoogleSheet("order")}>
                   Upload Order ke Google Sheet
                 </button>
 
@@ -1606,25 +1422,16 @@ export default function App() {
                     <p>ODP: {order.odp}</p>
                     <p>Teknisi 1: {order.teknisi1}</p>
                     <p>NIK Teknisi 1: {order.nikTeknisi1}</p>
-                    <p>
-                      Service Area Teknisi 1: {order.serviceAreaTeknisi1 || '-'}
-                    </p>
-                    <p>Teknisi 2: {order.teknisi2 || '-'}</p>
-                    <p>NIK Teknisi 2: {order.nikTeknisi2 || '-'}</p>
-                    <p>
-                      Service Area Teknisi 2: {order.serviceAreaTeknisi2 || '-'}
-                    </p>
+                    <p>Service Area Teknisi 1: {order.serviceAreaTeknisi1 || "-"}</p>
+                    <p>Teknisi 2: {order.teknisi2 || "-"}</p>
+                    <p>NIK Teknisi 2: {order.nikTeknisi2 || "-"}</p>
+                    <p>Service Area Teknisi 2: {order.serviceAreaTeknisi2 || "-"}</p>
                     <p>Jenis Pekerjaan: {order.jenisPekerjaan}</p>
                     <p>Status: {order.status}</p>
-                    <p>Jam Terima: {order.jamTerima || '-'}</p>
-                    <p>Jam Berangkat: {order.jamBerangkat || '-'}</p>
-                    <p>Jam Check-in: {order.jamCheckin || '-'}</p>
-                    <p>
-                      Check-in GPS:{' '}
-                      {order.checkinLat
-                        ? `${order.checkinLat}, ${order.checkinLng}`
-                        : '-'}
-                    </p>
+                    <p>Jam Terima: {order.jamTerima || "-"}</p>
+                    <p>Jam Berangkat: {order.jamBerangkat || "-"}</p>
+                    <p>Jam Check-in: {order.jamCheckin || "-"}</p>
+                    <p>Check-in GPS: {order.checkinLat ? `${order.checkinLat}, ${order.checkinLng}` : "-"}</p>
                     {order.checkinMapUrl && (
                       <p>
                         <a href={order.checkinMapUrl} target="_blank">
@@ -1632,20 +1439,18 @@ export default function App() {
                         </a>
                       </p>
                     )}
-                    <p>Jam Proses: {order.jamProses || '-'}</p>
-                    <p>Jam Selesai: {order.jamSelesai || '-'}</p>
-                    <p>Keterangan Pending: {order.keteranganPending || '-'}</p>
+                    <p>Jam Proses: {order.jamProses || "-"}</p>
+                    <p>Jam Selesai: {order.jamSelesai || "-"}</p>
+                    <p>Keterangan Pending: {order.keteranganPending || "-"}</p>
                     <p>Jumlah Foto Pending: {order.fotoPending.length}</p>
-                    <p>Keterangan Kendala: {order.keteranganKendala || '-'}</p>
+                    <p>Keterangan Kendala: {order.keteranganKendala || "-"}</p>
                     <p>Jumlah Foto Kendala: {order.fotoKendala.length}</p>
                     <p>Jumlah Foto Lapangan: {order.fotoLapangan.length}</p>
                     <p>Jumlah Foto Hasil: {order.fotoHasil.length}</p>
-                    <p>Catatan: {order.catatan || '-'}</p>
+                    <p>Catatan: {order.catatan || "-"}</p>
 
-                    {order.status === 'Selesai' && (
-                      <button
-                        onClick={() => updateStatus(order.noWo, 'Approved')}
-                      >
+                    {order.status === "Selesai" && (
+                      <button onClick={() => updateStatus(order.noWo, "Approved")}>
                         Approve
                       </button>
                     )}
@@ -1655,7 +1460,7 @@ export default function App() {
             </>
           )}
 
-          {tabAdmin === 'riwayatBulanan' && (
+          {tabAdmin === "riwayatBulanan" && (
             <>
               <div className="card">
                 <h2>Riwayat Orderan Pekerjaan Teknisi Per Bulan</h2>
@@ -1696,7 +1501,7 @@ export default function App() {
                         <tr key={r.teknisi.id}>
                           <td>{r.teknisi.nik}</td>
                           <td>{r.teknisi.nama}</td>
-                          <td>{r.teknisi.serviceArea || '-'}</td>
+                          <td>{r.teknisi.serviceArea || "-"}</td>
                           <td>{r.totalOrder}</td>
                           <td>{r.selesai}</td>
                           <td>{r.pending}</td>
@@ -1715,30 +1520,24 @@ export default function App() {
               <div className="card">
                 <h2>Detail Order Bulan {filterBulanAdmin}</h2>
 
-                {ordersBulanAdmin.length === 0 && (
-                  <p>Belum ada order di bulan ini.</p>
-                )}
+                {ordersBulanAdmin.length === 0 && <p>Belum ada order di bulan ini.</p>}
 
                 {ordersBulanAdmin.map((order) => (
                   <div className="item" key={order.noWo}>
                     <div className="row-between">
                       <b>{order.noWo}</b>
-                      <span className={`badge ${order.status}`}>
-                        {order.status}
-                      </span>
+                      <span className={`badge ${order.status}`}>{order.status}</span>
                     </div>
-                    <p>
-                      Tanggal: {order.tanggal} {order.jamOrder}
-                    </p>
+                    <p>Tanggal: {order.tanggal} {order.jamOrder}</p>
                     <p>ODP: {order.odp}</p>
                     <p>Teknisi 1: {order.teknisi1}</p>
-                    <p>Teknisi 2: {order.teknisi2 || '-'}</p>
+                    <p>Teknisi 2: {order.teknisi2 || "-"}</p>
                     <p>Jenis Pekerjaan: {order.jenisPekerjaan}</p>
-                    <p>Jam Check-in: {order.jamCheckin || '-'}</p>
-                    <p>Jam Selesai: {order.jamSelesai || '-'}</p>
-                    <p>Keterangan Pending: {order.keteranganPending || '-'}</p>
+                    <p>Jam Check-in: {order.jamCheckin || "-"}</p>
+                    <p>Jam Selesai: {order.jamSelesai || "-"}</p>
+                    <p>Keterangan Pending: {order.keteranganPending || "-"}</p>
                     <p>Foto Pending: {order.fotoPending.length}</p>
-                    <p>Keterangan Kendala: {order.keteranganKendala || '-'}</p>
+                    <p>Keterangan Kendala: {order.keteranganKendala || "-"}</p>
                     <p>Foto Kendala: {order.fotoKendala.length}</p>
                     <p>Foto Lapangan: {order.fotoLapangan.length}</p>
                     <p>Foto Hasil: {order.fotoHasil.length}</p>
@@ -1754,33 +1553,34 @@ export default function App() {
               </div>
             </>
           )}
+
         </>
       )}
 
-      {isLoggedIn && role === 'teknisi' && (
+      {isLoggedIn && role === "teknisi" && (
         <>
           <div className="tabs">
             <button
-              className={tabTeknisi === 'absen' ? 'active' : ''}
-              onClick={() => setTabTeknisi('absen')}
+              className={tabTeknisi === "absen" ? "active" : ""}
+              onClick={() => setTabTeknisi("absen")}
             >
               Absen Pagi
             </button>
             <button
-              className={tabTeknisi === 'order' ? 'active' : ''}
-              onClick={() => setTabTeknisi('order')}
+              className={tabTeknisi === "order" ? "active" : ""}
+              onClick={() => setTabTeknisi("order")}
             >
               Order Saya
             </button>
             <button
-              className={tabTeknisi === 'riwayat' ? 'active' : ''}
-              onClick={() => setTabTeknisi('riwayat')}
+              className={tabTeknisi === "riwayat" ? "active" : ""}
+              onClick={() => setTabTeknisi("riwayat")}
             >
               Riwayat
             </button>
           </div>
 
-          {tabTeknisi === 'absen' && (
+          {tabTeknisi === "absen" && (
             <div className="card">
               <h2>Absen Pagi</h2>
 
@@ -1849,7 +1649,7 @@ export default function App() {
             </div>
           )}
 
-          {tabTeknisi === 'order' && (
+          {tabTeknisi === "order" && (
             <div className="card">
               <h2>Order Saya</h2>
 
@@ -1866,46 +1666,38 @@ export default function App() {
 
                   <p>ODP: {order.odp}</p>
                   <p>Teknisi 1: {order.teknisi1}</p>
-                  <p>Teknisi 2: {order.teknisi2 || '-'}</p>
+                  <p>Teknisi 2: {order.teknisi2 || "-"}</p>
                   <p>Jenis Pekerjaan: {order.jenisPekerjaan}</p>
-                  <p>Catatan: {order.catatan || '-'}</p>
+                  <p>Catatan: {order.catatan || "-"}</p>
                   <p>Jam Order: {order.jamOrder}</p>
 
-                  {order.status === 'Baru' && (
+                  {order.status === "Baru" && (
                     <>
-                      <button
-                        onClick={() => updateStatus(order.noWo, 'Diterima')}
-                      >
+                      <button onClick={() => updateStatus(order.noWo, "Diterima")}>
                         Terima Order
                       </button>
-                      <button
-                        onClick={() => updateStatus(order.noWo, 'Ditolak')}
-                      >
+                      <button onClick={() => updateStatus(order.noWo, "Ditolak")}>
                         Tolak
                       </button>
                     </>
                   )}
 
-                  {order.status === 'Diterima' && (
-                    <button
-                      onClick={() => updateStatus(order.noWo, 'Berangkat')}
-                    >
+                  {order.status === "Diterima" && (
+                    <button onClick={() => updateStatus(order.noWo, "Berangkat")}>
                       Mulai Berangkat
                     </button>
                   )}
 
-                  {order.status === 'Berangkat' && (
+                  {order.status === "Berangkat" && (
                     <button onClick={() => checkinOrder(order.noWo)}>
                       Check-in Lokasi + Ambil Titik Koordinat
                     </button>
                   )}
 
-                  {order.status === 'Check-in' && (
+                  {order.status === "Check-in" && (
                     <>
                       <div className="gps-box">
-                        <p>
-                          Check-in GPS: {order.checkinLat}, {order.checkinLng}
-                        </p>
+                        <p>Check-in GPS: {order.checkinLat}, {order.checkinLng}</p>
                         {order.checkinMapUrl && (
                           <a href={order.checkinMapUrl} target="_blank">
                             Buka Titik Check-in
@@ -1923,9 +1715,7 @@ export default function App() {
                         }
                       />
 
-                      <p>
-                        Foto lapangan tersimpan: {order.fotoLapangan.length}
-                      </p>
+                      <p>Foto lapangan tersimpan: {order.fotoLapangan.length}</p>
 
                       {order.fotoLapangan.length > 0 && (
                         <div className="foto-grid">
@@ -1939,15 +1729,13 @@ export default function App() {
                         </div>
                       )}
 
-                      <button
-                        onClick={() => updateStatus(order.noWo, 'Proses')}
-                      >
+                      <button onClick={() => updateStatus(order.noWo, "Proses")}>
                         Mulai Kerja
                       </button>
                     </>
                   )}
 
-                  {order.status === 'Proses' && (
+                  {order.status === "Proses" && (
                     <>
                       <label>Upload Foto Hasil Pekerjaan</label>
                       <input
@@ -1975,7 +1763,7 @@ export default function App() {
 
                       <label>Keterangan Pending</label>
                       <textarea
-                        value={order.keteranganPending || ''}
+                        value={order.keteranganPending || ""}
                         onChange={(e) =>
                           updateKeteranganPending(order.noWo, e.target.value)
                         }
@@ -2008,7 +1796,7 @@ export default function App() {
 
                       <label>Keterangan Kendala</label>
                       <textarea
-                        value={order.keteranganKendala || ''}
+                        value={order.keteranganKendala || ""}
                         onChange={(e) =>
                           updateKeteranganKendala(order.noWo, e.target.value)
                         }
@@ -2051,11 +1839,11 @@ export default function App() {
                     </>
                   )}
 
-                  {order.status === 'Pending' && (
+                  {order.status === "Pending" && (
                     <>
                       <label>Keterangan Pending</label>
                       <textarea
-                        value={order.keteranganPending || ''}
+                        value={order.keteranganPending || ""}
                         onChange={(e) =>
                           updateKeteranganPending(order.noWo, e.target.value)
                         }
@@ -2086,19 +1874,17 @@ export default function App() {
                         </div>
                       )}
 
-                      <button
-                        onClick={() => updateStatus(order.noWo, 'Proses')}
-                      >
+                      <button onClick={() => updateStatus(order.noWo, "Proses")}>
                         Lanjutkan Kerja
                       </button>
                     </>
                   )}
 
-                  {order.status === 'Kendala' && (
+                  {order.status === "Kendala" && (
                     <>
                       <label>Keterangan Kendala</label>
                       <textarea
-                        value={order.keteranganKendala || ''}
+                        value={order.keteranganKendala || ""}
                         onChange={(e) =>
                           updateKeteranganKendala(order.noWo, e.target.value)
                         }
@@ -2129,9 +1915,7 @@ export default function App() {
                         </div>
                       )}
 
-                      <button
-                        onClick={() => updateStatus(order.noWo, 'Proses')}
-                      >
+                      <button onClick={() => updateStatus(order.noWo, "Proses")}>
                         Lanjutkan Kerja
                       </button>
                       <button onClick={() => setOrderSelesai(order.noWo)}>
@@ -2144,7 +1928,7 @@ export default function App() {
             </div>
           )}
 
-          {tabTeknisi === 'riwayat' && (
+          {tabTeknisi === "riwayat" && (
             <div className="card">
               <h2>Riwayat Saya Per Bulan</h2>
 
@@ -2161,76 +1945,53 @@ export default function App() {
                   <span>Total Order</span>
                 </div>
                 <div className="stat">
-                  <b>
-                    {
-                      ordersBulanTeknisi.filter((o) =>
-                        ['Selesai', 'Approved'].includes(o.status)
-                      ).length
-                    }
-                  </b>
+                  <b>{ordersBulanTeknisi.filter((o) => ["Selesai", "Approved"].includes(o.status)).length}</b>
                   <span>Selesai</span>
                 </div>
                 <div className="stat">
-                  <b>
-                    {
-                      absensiBulanTeknisi.filter((a) =>
-                        ['Hadir', 'Standby'].includes(a.status)
-                      ).length
-                    }
-                  </b>
+                  <b>{absensiBulanTeknisi.filter((a) => ["Hadir", "Standby"].includes(a.status)).length}</b>
                   <span>Hadir/Standby</span>
                 </div>
                 <div className="stat">
-                  <b>
-                    {
-                      absensiBulanTeknisi.filter(
-                        (a) => a.status === 'Terlambat'
-                      ).length
-                    }
-                  </b>
+                  <b>{absensiBulanTeknisi.filter((a) => a.status === "Terlambat").length}</b>
                   <span>Terlambat</span>
                 </div>
               </div>
 
               <h3>Absensi</h3>
-              {absensiBulanTeknisi.length === 0 && (
-                <p>Belum ada riwayat absensi bulan ini.</p>
-              )}
+              {absensiBulanTeknisi.length === 0 && <p>Belum ada riwayat absensi bulan ini.</p>}
 
-              {absensiBulanTeknisi.map((a, index) => (
-                <div className="item" key={index}>
-                  <b>{a.status}</b>
-                  <p>
-                    {a.tanggal} {a.jam}
-                  </p>
-                  <p>Lokasi manual: {a.lokasi}</p>
-                  <p>
-                    GPS: {a.gpsLat}, {a.gpsLng}
-                  </p>
-                  <p>Catatan: {a.catatan}</p>
-                  {a.mapUrl && (
+              {absensiBulanTeknisi
+                .map((a, index) => (
+                  <div className="item" key={index}>
+                    <b>{a.status}</b>
                     <p>
-                      <a href={a.mapUrl} target="_blank">
-                        Buka Lokasi di Google Maps
-                      </a>
+                      {a.tanggal} {a.jam}
                     </p>
-                  )}
-                </div>
-              ))}
+                    <p>Lokasi manual: {a.lokasi}</p>
+                    <p>GPS: {a.gpsLat}, {a.gpsLng}</p>
+                    <p>Catatan: {a.catatan}</p>
+                    {a.mapUrl && (
+                      <p>
+                        <a href={a.mapUrl} target="_blank">
+                          Buka Lokasi di Google Maps
+                        </a>
+                      </p>
+                    )}
+                  </div>
+                ))}
 
               <h3>Order</h3>
-              {ordersBulanTeknisi.length === 0 && (
-                <p>Belum ada riwayat order bulan ini.</p>
-              )}
+              {ordersBulanTeknisi.length === 0 && <p>Belum ada riwayat order bulan ini.</p>}
               {ordersBulanTeknisi.map((o) => (
                 <div className="item" key={o.noWo}>
                   <b>{o.noWo}</b>
                   <p>ODP: {o.odp}</p>
                   <p>Jenis Pekerjaan: {o.jenisPekerjaan}</p>
                   <p>Status: {o.status}</p>
-                  <p>Keterangan Pending: {o.keteranganPending || '-'}</p>
+                  <p>Keterangan Pending: {o.keteranganPending || "-"}</p>
                   <p>Foto Pending: {o.fotoPending.length}</p>
-                  <p>Keterangan Kendala: {o.keteranganKendala || '-'}</p>
+                  <p>Keterangan Kendala: {o.keteranganKendala || "-"}</p>
                   <p>Foto Kendala: {o.fotoKendala.length}</p>
                   <p>Foto Lapangan: {o.fotoLapangan.length}</p>
                   <p>Foto Hasil: {o.fotoHasil.length}</p>
