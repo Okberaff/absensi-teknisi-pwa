@@ -1066,7 +1066,7 @@ export default function App() {
         <div className="card">
           <h2>Login</h2>
           <p className="subtitle">
-            Teknisi login cukup dengan NIK. Admin/Super Admin login dengan NIK dan PIN dari sheet USERS.
+            Teknisi login cukup dengan NIK. Admin login dengan NIK dan PIN.
           </p>
 
           <label>NIK</label>
