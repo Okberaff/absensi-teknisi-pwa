@@ -1069,15 +1069,11 @@ export default function App() {
   return (
     <div className="container">
       <h1>Absensi & Job Order Teknisi</h1>
-      <p className="subtitle">
-        MVP absensi pagi, No. WO, ODP, teknisi 1/2, selfie, GPS, foto pekerjaan, dan export rekap.
-      </p>
-
       {!isLoggedIn && (
         <div className="card">
           <h2>Login</h2>
           <p className="subtitle">
-            Teknisi login cukup dengan NIK. Admin/Super Admin login dengan NIK dan PIN dari sheet USERS.
+          Masukkan NIK untuk login. Khusus admin, masukkan PIN.
           </p>
 
           <label>NIK</label>
