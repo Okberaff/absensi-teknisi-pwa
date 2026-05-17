@@ -1,47 +1,47 @@
-const CACHE_NAME = 'absensi-teknisi-v1';
+const CACHE_NAME = "absensi-teknisi-v1";
 
 const APP_ASSETS = [
-  '/',
-  '/index.html',
-  '/manifest.webmanifest',
-  '/favicon.svg',
+  "/",
+  "/index.html",
+  "/manifest.webmanifest",
+  "/icon-192.png",
+  "/icon-512.png"
 ];
 
-self.addEventListener('install', (event) => {
+self.addEventListener("install", (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_ASSETS))
   );
   self.skipWaiting();
 });
 
-self.addEventListener('activate', (event) => {
+self.addEventListener("activate", (event) => {
   event.waitUntil(
-    caches
-      .keys()
-      .then((keys) =>
-        Promise.all(
-          keys
-            .filter((key) => key !== CACHE_NAME)
-            .map((key) => caches.delete(key))
-        )
+    caches.keys().then((keys) =>
+      Promise.all(
+        keys
+          .filter((key) => key !== CACHE_NAME)
+          .map((key) => caches.delete(key))
       )
+    )
   );
   self.clients.claim();
 });
 
-self.addEventListener('fetch', (event) => {
+self.addEventListener("fetch", (event) => {
   const request = event.request;
 
+  // Jangan cache request ke Google Apps Script, Google Drive, Telegram, atau API luar.
   if (
-    request.url.includes('script.google.com') ||
-    request.url.includes('googleusercontent.com') ||
-    request.url.includes('google.com') ||
-    request.url.includes('api.telegram.org')
+    request.url.includes("script.google.com") ||
+    request.url.includes("googleusercontent.com") ||
+    request.url.includes("google.com") ||
+    request.url.includes("api.telegram.org")
   ) {
     return;
   }
 
-  if (request.method !== 'GET') {
+  if (request.method !== "GET") {
     return;
   }
 
@@ -59,7 +59,7 @@ self.addEventListener('fetch', (event) => {
 
           return response;
         })
-        .catch(() => caches.match('/index.html'));
+        .catch(() => caches.match("/index.html"));
     })
   );
 });

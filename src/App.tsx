@@ -50,6 +50,10 @@ type Order = {
   status: string;
   catatan: string;
 
+  dibuatOleh: string;
+  nikPembuat: string;
+  rolePembuat: string;
+
   jamTerima?: string;
   jamBerangkat?: string;
   jamCheckin?: string;
@@ -397,6 +401,10 @@ export default function App() {
       jenisPekerjaan: formOrder.jenisPekerjaan,
       status: "Baru",
       catatan: formOrder.catatan,
+
+      dibuatOleh: currentUser?.nama || "Admin",
+      nikPembuat: currentUser?.nik || "",
+      rolePembuat: currentUser?.role || "admin",
 
       fotoLapangan: [],
       fotoHasil: [],
@@ -759,7 +767,7 @@ export default function App() {
 
   function exportOrder() {
     const header =
-      "Tanggal,Jam Order,No WO,ODP,Teknisi 1,NIK Teknisi 1,Service Area Teknisi 1,Teknisi 2,NIK Teknisi 2,Service Area Teknisi 2,Jenis Pekerjaan,Status,Jam Terima,Jam Berangkat,Jam Checkin,Checkin Latitude,Checkin Longitude,Checkin Google Maps,Jam Proses,Jam Selesai,Keterangan Pending,Jumlah Foto Pending,Keterangan Kendala,Jumlah Foto Kendala,Jumlah Foto Lapangan,Jumlah Foto Hasil,Catatan\n";
+      "Tanggal,Jam Order,No WO,ODP,Teknisi 1,NIK Teknisi 1,Service Area Teknisi 1,Teknisi 2,NIK Teknisi 2,Service Area Teknisi 2,Jenis Pekerjaan,Dikirim Oleh,NIK Pengirim,Role Pengirim,Status,Jam Terima,Jam Berangkat,Jam Checkin,Checkin Latitude,Checkin Longitude,Checkin Google Maps,Jam Proses,Jam Selesai,Keterangan Pending,Jumlah Foto Pending,Keterangan Kendala,Jumlah Foto Kendala,Jumlah Foto Lapangan,Jumlah Foto Hasil,Catatan\n";
 
     const isi = orders
       .map((o) =>
@@ -775,6 +783,9 @@ export default function App() {
           o.nikTeknisi2,
           o.serviceAreaTeknisi2,
           o.jenisPekerjaan,
+          o.dibuatOleh || "",
+          o.nikPembuat || "",
+          o.rolePembuat || "",
           o.status,
           o.jamTerima || "",
           o.jamBerangkat || "",
@@ -1066,7 +1077,7 @@ export default function App() {
         <div className="card">
           <h2>Login</h2>
           <p className="subtitle">
-            Teknisi login cukup dengan NIK. Admin login dengan NIK dan PIN
+            Teknisi login cukup dengan NIK. Admin/Super Admin login dengan NIK dan PIN dari sheet USERS.
           </p>
 
           <label>NIK</label>
@@ -1076,7 +1087,7 @@ export default function App() {
             placeholder="Masukkan NIK teknisi / NIK admin"
           />
 
-          <label>PIN Admin / Super Admin</label>
+          <label>PIN Admin</label>
           <input
             type="password"
             value={loginPin}
@@ -1216,6 +1227,7 @@ export default function App() {
                     <p>Teknisi 1: {order.teknisi1}</p>
                     <p>Teknisi 2: {order.teknisi2 || "-"}</p>
                     <p>Jenis Pekerjaan: {order.jenisPekerjaan}</p>
+                    <p>Dikirim Oleh: {order.dibuatOleh || "-"} {order.nikPembuat ? `(${order.nikPembuat})` : ""}</p>
                     <p>Check-in: {order.checkinLat ? `${order.checkinLat}, ${order.checkinLng}` : "-"}</p>
                     {order.checkinMapUrl && (
                       <p>
@@ -1430,6 +1442,7 @@ export default function App() {
                     <p>NIK Teknisi 2: {order.nikTeknisi2 || "-"}</p>
                     <p>Service Area Teknisi 2: {order.serviceAreaTeknisi2 || "-"}</p>
                     <p>Jenis Pekerjaan: {order.jenisPekerjaan}</p>
+                    <p>Dikirim Oleh: {order.dibuatOleh || "-"} {order.nikPembuat ? `(${order.nikPembuat})` : ""}</p>
                     <p>Status: {order.status}</p>
                     <p>Jam Terima: {order.jamTerima || "-"}</p>
                     <p>Jam Berangkat: {order.jamBerangkat || "-"}</p>
@@ -1536,6 +1549,7 @@ export default function App() {
                     <p>Teknisi 1: {order.teknisi1}</p>
                     <p>Teknisi 2: {order.teknisi2 || "-"}</p>
                     <p>Jenis Pekerjaan: {order.jenisPekerjaan}</p>
+                    <p>Dikirim Oleh: {order.dibuatOleh || "-"} {order.nikPembuat ? `(${order.nikPembuat})` : ""}</p>
                     <p>Jam Check-in: {order.jamCheckin || "-"}</p>
                     <p>Jam Selesai: {order.jamSelesai || "-"}</p>
                     <p>Keterangan Pending: {order.keteranganPending || "-"}</p>
@@ -1671,6 +1685,7 @@ export default function App() {
                   <p>Teknisi 1: {order.teknisi1}</p>
                   <p>Teknisi 2: {order.teknisi2 || "-"}</p>
                   <p>Jenis Pekerjaan: {order.jenisPekerjaan}</p>
+                  <p>Dikirim Oleh: {order.dibuatOleh || "-"}</p>
                   <p>Catatan: {order.catatan || "-"}</p>
                   <p>Jam Order: {order.jamOrder}</p>
 
@@ -1991,6 +2006,7 @@ export default function App() {
                   <b>{o.noWo}</b>
                   <p>ODP: {o.odp}</p>
                   <p>Jenis Pekerjaan: {o.jenisPekerjaan}</p>
+                  <p>Dikirim Oleh: {o.dibuatOleh || "-"}</p>
                   <p>Status: {o.status}</p>
                   <p>Keterangan Pending: {o.keteranganPending || "-"}</p>
                   <p>Foto Pending: {o.fotoPending.length}</p>
