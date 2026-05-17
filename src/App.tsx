@@ -1,4 +1,5 @@
-import { Component, ReactNode, useEffect, useState } from "react";
+import { Component, useEffect, useState } from "react";
+import type { ReactNode } from "react";
 import "./index.css";
 
 type Teknisi = {
@@ -93,6 +94,23 @@ type UserAkses = {
   active: string;
   catatan: string;
   updatedAt: string;
+};
+
+type RiwayatBulananSheet = {
+  bulan: string;
+  nik: string;
+  teknisi: string;
+  serviceArea: string;
+  totalOrder: number;
+  selesai: number;
+  pending: number;
+  kendala: number;
+  aktif: number;
+  hadir: number;
+  telat: number;
+  tanpaKeterangan: number;
+  libur: number;
+  uploadedAt: string;
 };
 
 type Role = "" | "admin" | "teknisi";
@@ -210,6 +228,7 @@ function AppContent() {
 
   const [absensi, setAbsensi] = useState<Absensi[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
+  const [riwayatBulananSheet, setRiwayatBulananSheet] = useState<RiwayatBulananSheet[]>([]);
 
   const [users, setUsers] = useState<UserAkses[]>([]);
   const [formUser, setFormUser] = useState<UserAkses>({
@@ -366,6 +385,9 @@ function AppContent() {
         if (result.ok) {
           const absensiSheet = Array.isArray(result.absensi) ? result.absensi : [];
           const orderSheet = Array.isArray(result.orders) ? result.orders : [];
+          const riwayatSheet = Array.isArray(result.riwayatBulanan)
+            ? result.riwayatBulanan
+            : [];
 
           setAbsensi(
             absensiSheet.map((a: any) => ({
@@ -421,8 +443,27 @@ function AppContent() {
             }))
           );
 
+          setRiwayatBulananSheet(
+            riwayatSheet.map((r: any) => ({
+              bulan: String(r.bulan || ""),
+              nik: String(r.nik || ""),
+              teknisi: String(r.teknisi || ""),
+              serviceArea: String(r.serviceArea || ""),
+              totalOrder: Number(r.totalOrder || 0),
+              selesai: Number(r.selesai || 0),
+              pending: Number(r.pending || 0),
+              kendala: Number(r.kendala || 0),
+              aktif: Number(r.aktif || 0),
+              hadir: Number(r.hadir || 0),
+              telat: Number(r.telat || 0),
+              tanpaKeterangan: Number(r.tanpaKeterangan || 0),
+              libur: Number(r.libur || 0),
+              uploadedAt: String(r.uploadedAt || ""),
+            }))
+          );
+
           if (showAlert) {
-            alert("Data dashboard berhasil dimuat dari Google Sheet.");
+            alert("Data dashboard berhasil dimuat manual dari Google Sheet.");
           }
         } else if (showAlert) {
           alert(result.message || "Gagal load dashboard dari Google Sheet.");
@@ -495,6 +536,42 @@ function AppContent() {
     } catch (error) {
       console.log("Auto upload ke Google Sheet gagal", error);
     }
+  }
+
+
+  function buatDataRiwayatBulanan(
+    absensiData: Absensi[],
+    orderData: Order[],
+    bulan: string
+  ) {
+    const orderBulan = orderData.filter((o) => cocokBulan(o.tanggal, bulan));
+    const absensiBulan = absensiData.filter((a) => cocokBulan(a.tanggal, bulan));
+
+    return teknisi.map((t) => {
+      const orderTeknisi = orderBulan.filter(
+        (o) => o.nikTeknisi1 === t.nik || o.nikTeknisi2 === t.nik
+      );
+
+      const absensiTeknisi = absensiBulan.filter((a) => a.nik === t.nik);
+
+      return {
+        bulan,
+        nik: t.nik,
+        teknisi: t.nama,
+        serviceArea: t.serviceArea,
+        totalOrder: orderTeknisi.length,
+        selesai: orderTeknisi.filter((o) => ["Selesai", "Approved"].includes(o.status)).length,
+        pending: orderTeknisi.filter((o) => o.status === "Pending").length,
+        kendala: orderTeknisi.filter((o) => o.status === "Kendala").length,
+        aktif: orderTeknisi.filter(
+          (o) => !["Selesai", "Approved", "Ditolak", "Pending", "Kendala"].includes(o.status)
+        ).length,
+        hadir: absensiTeknisi.filter((a) => ["Hadir", "Standby"].includes(a.status)).length,
+        telat: absensiTeknisi.filter((a) => a.status === "Terlambat").length,
+        tanpaKeterangan: absensiTeknisi.filter((a) => a.status === "Tanpa Keterangan").length,
+        libur: absensiTeknisi.filter((a) => a.status === "Libur").length,
+      };
+    });
   }
 
   async function autoUploadRiwayatBulanan(absensiData: Absensi[], orderData: Order[]) {
@@ -978,28 +1055,67 @@ function AppContent() {
     cocokBulan(a.tanggal, filterBulanAdmin)
   );
 
-  const rekapTeknisiBulanan = teknisi.map((t) => {
-    const orderTeknisi = ordersBulanAdmin.filter(
-      (o) => o.nikTeknisi1 === t.nik || o.nikTeknisi2 === t.nik
-    );
+  const rekapTeknisiBulananDariSheet = riwayatBulananSheet.filter(
+    (r) => r.bulan === filterBulanAdmin
+  );
 
-    const absensiTeknisi = absensiBulanAdmin.filter((a) => a.nik === t.nik);
+  const rekapTeknisiBulanan =
+    rekapTeknisiBulananDariSheet.length > 0
+      ? teknisi.map((t) => {
+          const dariSheet = rekapTeknisiBulananDariSheet.find(
+            (r) => String(r.nik).trim() === String(t.nik).trim()
+          );
 
-    return {
-      teknisi: t,
-      totalOrder: orderTeknisi.length,
-      selesai: orderTeknisi.filter((o) => ["Selesai", "Approved"].includes(o.status)).length,
-      pending: orderTeknisi.filter((o) => o.status === "Pending").length,
-      kendala: orderTeknisi.filter((o) => o.status === "Kendala").length,
-      aktif: orderTeknisi.filter(
-        (o) => !["Selesai", "Approved", "Ditolak", "Pending", "Kendala"].includes(o.status)
-      ).length,
-      hadir: absensiTeknisi.filter((a) => ["Hadir", "Standby"].includes(a.status)).length,
-      telat: absensiTeknisi.filter((a) => a.status === "Terlambat").length,
-      tanpaKeterangan: absensiTeknisi.filter((a) => a.status === "Tanpa Keterangan").length,
-      libur: absensiTeknisi.filter((a) => a.status === "Libur").length,
-    };
-  });
+          if (dariSheet) {
+            return {
+              teknisi: t,
+              totalOrder: dariSheet.totalOrder,
+              selesai: dariSheet.selesai,
+              pending: dariSheet.pending,
+              kendala: dariSheet.kendala,
+              aktif: dariSheet.aktif,
+              hadir: dariSheet.hadir,
+              telat: dariSheet.telat,
+              tanpaKeterangan: dariSheet.tanpaKeterangan,
+              libur: dariSheet.libur,
+            };
+          }
+
+          return {
+            teknisi: t,
+            totalOrder: 0,
+            selesai: 0,
+            pending: 0,
+            kendala: 0,
+            aktif: 0,
+            hadir: 0,
+            telat: 0,
+            tanpaKeterangan: 0,
+            libur: 0,
+          };
+        })
+      : teknisi.map((t) => {
+          const orderTeknisi = ordersBulanAdmin.filter(
+            (o) => o.nikTeknisi1 === t.nik || o.nikTeknisi2 === t.nik
+          );
+
+          const absensiTeknisi = absensiBulanAdmin.filter((a) => a.nik === t.nik);
+
+          return {
+            teknisi: t,
+            totalOrder: orderTeknisi.length,
+            selesai: orderTeknisi.filter((o) => ["Selesai", "Approved"].includes(o.status)).length,
+            pending: orderTeknisi.filter((o) => o.status === "Pending").length,
+            kendala: orderTeknisi.filter((o) => o.status === "Kendala").length,
+            aktif: orderTeknisi.filter(
+              (o) => !["Selesai", "Approved", "Ditolak", "Pending", "Kendala"].includes(o.status)
+            ).length,
+            hadir: absensiTeknisi.filter((a) => ["Hadir", "Standby"].includes(a.status)).length,
+            telat: absensiTeknisi.filter((a) => a.status === "Terlambat").length,
+            tanpaKeterangan: absensiTeknisi.filter((a) => a.status === "Tanpa Keterangan").length,
+            libur: absensiTeknisi.filter((a) => a.status === "Libur").length,
+          };
+        });
 
   const ordersBulanTeknisi: Order[] = orders.filter(
     (o) =>
@@ -1152,6 +1268,9 @@ function AppContent() {
 
           setPilihTeknisiId(t.id);
           setRole("teknisi");
+
+          // Khusus teknisi: riwayat/order otomatis sinkron dari Google Sheet saat login.
+          loadDashboardDariGoogleSheet(false);
         } else {
           setRole("admin");
         }
@@ -1443,7 +1562,7 @@ function AppContent() {
               Riwayat Bulanan
             </button>
             <button onClick={() => loadDashboardDariGoogleSheet(true)}>
-              Load Dashboard dari Sheet
+              Load Manual dari Google Sheet
             </button>
             {currentUser?.role === "superadmin" && (
               <button
@@ -1906,6 +2025,11 @@ function AppContent() {
                   value={filterBulanAdmin}
                   onChange={(e) => setFilterBulanAdmin(e.target.value)}
                 />
+
+                <p className="info-text">
+                  Sumber data riwayat bulanan mengikuti Google Sheet setelah klik tombol
+                  Load Manual dari Google Sheet.
+                </p>
 
                 <button onClick={exportRiwayatBulananAdmin}>
                   Export Riwayat Bulanan CSV
