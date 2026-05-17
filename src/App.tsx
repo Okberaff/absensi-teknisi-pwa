@@ -126,10 +126,10 @@ function hariIni() {
 }
 
 function jamSekarang() {
-  const d = new Date();
-  const hh = String(d.getHours()).padStart(2, "0");
-  const mm = String(d.getMinutes()).padStart(2, "0");
-  return `${hh}:${mm}`;
+  return new Date().toLocaleTimeString("id-ID", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 }
 
 function sudahLewatJam8() {
@@ -249,6 +249,7 @@ export default function App() {
 
   useEffect(() => {
     loadTeknisiDariGoogleSheet(true);
+    loadDashboardDariGoogleSheet();
   }, []);
 
 
@@ -322,13 +323,17 @@ export default function App() {
 
           if (!silent) {
             if (!silent) {
+            if (!silent) {
             alert(`Data teknisi berhasil direfresh. Total: ${result.data.length} teknisi.`);
+          }
           }
           }
         } else {
           if (!silent) {
             if (!silent) {
+            if (!silent) {
             alert(result.message || "Data teknisi tidak ditemukan di sheet NAKER.");
+          }
           }
           }
         }
@@ -347,7 +352,9 @@ export default function App() {
     script.onerror = () => {
       if (!silent) {
         if (!silent) {
+        if (!silent) {
         alert("Gagal mengambil data teknisi. Pastikan Web App sudah deploy versi terbaru dan akses Anyone.");
+      }
       }
       }
       delete (window as any)[callbackName];
@@ -355,6 +362,34 @@ export default function App() {
     };
 
     document.body.appendChild(script);
+  }
+
+
+  function loadDashboardDariGoogleSheet() {
+    if (!GOOGLE_SCRIPT_URL) {
+      return;
+    }
+
+    panggilGoogleScriptJsonp(
+      "dashboard",
+      {},
+      (result) => {
+        if (result.ok) {
+          if (Array.isArray(result.absensi)) {
+            setAbsensi(result.absensi);
+          }
+
+          if (Array.isArray(result.orders)) {
+            setOrders(result.orders);
+          }
+        } else {
+          console.log(result.message || "Gagal load dashboard dari Google Sheet.");
+        }
+      },
+      () => {
+        console.log("Gagal load dashboard dari Google Sheet.");
+      }
+    );
   }
 
   function ambilFotoSelfie(e: React.ChangeEvent<HTMLInputElement>) {
@@ -392,6 +427,56 @@ export default function App() {
         maximumAge: 0,
       }
     );
+  }
+
+
+  async function autoUploadKeGoogleSheet(type: "absensi" | "order", data: Absensi[] | Order[]) {
+    if (!GOOGLE_SCRIPT_URL) {
+      return;
+    }
+
+    try {
+      await fetch(GOOGLE_SCRIPT_URL, {
+        method: "POST",
+        mode: "no-cors",
+        headers: {
+          "Content-Type": "text/plain;charset=utf-8",
+        },
+        body: JSON.stringify({
+          token: API_TOKEN,
+          type,
+          data,
+        }),
+      });
+    } catch (error) {
+      console.log("Auto upload ke Google Sheet gagal", error);
+    }
+  }
+
+  async function autoUploadRiwayatBulanan(absensiData: Absensi[], orderData: Order[]) {
+    if (!GOOGLE_SCRIPT_URL) {
+      return;
+    }
+
+    const bulan = bulanIni();
+    const data = buatDataRiwayatBulanan(absensiData, orderData, bulan);
+
+    try {
+      await fetch(GOOGLE_SCRIPT_URL, {
+        method: "POST",
+        mode: "no-cors",
+        headers: {
+          "Content-Type": "text/plain;charset=utf-8",
+        },
+        body: JSON.stringify({
+          token: API_TOKEN,
+          type: "riwayat_bulanan",
+          data,
+        }),
+      });
+    } catch (error) {
+      console.log("Auto upload riwayat bulanan gagal", error);
+    }
   }
 
   function kirimAbsen() {
@@ -434,7 +519,10 @@ export default function App() {
       mapUrl: gps.mapUrl,
     };
 
-    setAbsensi([data, ...absensi]);
+    const nextAbsensi = [data, ...absensi];
+    setAbsensi(nextAbsensi);
+    autoUploadKeGoogleSheet("absensi", nextAbsensi);
+    autoUploadRiwayatBulanan(nextAbsensi, orders);
     setFormAbsen({
       status: "Hadir",
       lokasi: "",
@@ -499,7 +587,10 @@ export default function App() {
       keteranganKendala: "",
     };
 
-    setOrders([data, ...orders]);
+    const nextOrders = [data, ...orders];
+    setOrders(nextOrders);
+    autoUploadKeGoogleSheet("order", nextOrders);
+    autoUploadRiwayatBulanan(absensi, nextOrders);
 
     setFormOrder({
       noWo: "",
@@ -596,29 +687,34 @@ export default function App() {
       mapUrl: "",
     };
 
-    setAbsensi([data, ...absensi]);
+    const nextAbsensi = [data, ...absensi];
+    setAbsensi(nextAbsensi);
+    autoUploadKeGoogleSheet("absensi", nextAbsensi);
+    autoUploadRiwayatBulanan(nextAbsensi, orders);
   }
 
   function updateStatus(noWo: string, status: string) {
     let updatedOrderForNotif: Order | null = null;
 
-    setOrders(
-      orders.map((order) => {
-        if (order.noWo !== noWo) return order;
+    const nextOrders = orders.map((order) => {
+      if (order.noWo !== noWo) return order;
 
-        const tambahan: Partial<Order> = {};
+      const tambahan: Partial<Order> = {};
 
-        if (status === "Diterima") tambahan.jamTerima = jamSekarang();
-        if (status === "Berangkat") tambahan.jamBerangkat = jamSekarang();
-        if (status === "Proses") tambahan.jamProses = jamSekarang();
-        if (status === "Selesai") tambahan.jamSelesai = jamSekarang();
+      if (status === "Diterima") tambahan.jamTerima = jamSekarang();
+      if (status === "Berangkat") tambahan.jamBerangkat = jamSekarang();
+      if (status === "Proses") tambahan.jamProses = jamSekarang();
+      if (status === "Selesai") tambahan.jamSelesai = jamSekarang();
 
-        const updatedOrder = { ...order, status, ...tambahan };
-        updatedOrderForNotif = updatedOrder;
+      const updatedOrder = { ...order, status, ...tambahan };
+      updatedOrderForNotif = updatedOrder;
 
-        return updatedOrder;
-      })
-    );
+      return updatedOrder;
+    });
+
+    setOrders(nextOrders);
+    autoUploadKeGoogleSheet("order", nextOrders);
+    autoUploadRiwayatBulanan(absensi, nextOrders);
 
     if (updatedOrderForNotif && ["Berangkat", "Proses", "Selesai"].includes(status)) {
       kirimNotifStatusTelegram(updatedOrderForNotif, status);
@@ -637,20 +733,22 @@ export default function App() {
         const lng = String(position.coords.longitude);
         const mapUrl = `https://www.google.com/maps?q=${lat},${lng}`;
 
-        setOrders(
-          orders.map((order) =>
-            order.noWo === noWo
-              ? {
-                  ...order,
-                  status: "Check-in",
-                  jamCheckin: jamSekarang(),
-                  checkinLat: lat,
-                  checkinLng: lng,
-                  checkinMapUrl: mapUrl,
-                }
-              : order
-          )
+        const nextOrders = orders.map((order) =>
+          order.noWo === noWo
+            ? {
+                ...order,
+                status: "Check-in",
+                jamCheckin: jamSekarang(),
+                checkinLat: lat,
+                checkinLng: lng,
+                checkinMapUrl: mapUrl,
+              }
+            : order
         );
+
+        setOrders(nextOrders);
+        autoUploadKeGoogleSheet("order", nextOrders);
+        autoUploadRiwayatBulanan(absensi, nextOrders);
 
         alert("Check-in berhasil. Titik koordinat sudah tersimpan.");
       },
@@ -989,6 +1087,42 @@ export default function App() {
     };
   });
 
+
+  function buatDataRiwayatBulanan(
+    absensiData: Absensi[],
+    orderData: Order[],
+    bulan: string
+  ) {
+    const orderBulan = orderData.filter((o) => cocokBulan(o.tanggal, bulan));
+    const absensiBulan = absensiData.filter((a) => cocokBulan(a.tanggal, bulan));
+
+    return teknisi.map((t) => {
+      const orderTeknisi = orderBulan.filter(
+        (o) => o.nikTeknisi1 === t.nik || o.nikTeknisi2 === t.nik
+      );
+
+      const absensiTeknisi = absensiBulan.filter((a) => a.nik === t.nik);
+
+      return {
+        bulan,
+        nik: t.nik,
+        teknisi: t.nama,
+        serviceArea: t.serviceArea,
+        totalOrder: orderTeknisi.length,
+        selesai: orderTeknisi.filter((o) => ["Selesai", "Approved"].includes(o.status)).length,
+        pending: orderTeknisi.filter((o) => o.status === "Pending").length,
+        kendala: orderTeknisi.filter((o) => o.status === "Kendala").length,
+        aktif: orderTeknisi.filter(
+          (o) => !["Selesai", "Approved", "Ditolak", "Pending", "Kendala"].includes(o.status)
+        ).length,
+        hadir: absensiTeknisi.filter((a) => ["Hadir", "Standby"].includes(a.status)).length,
+        telat: absensiTeknisi.filter((a) => a.status === "Terlambat").length,
+        tanpaKeterangan: absensiTeknisi.filter((a) => a.status === "Tanpa Keterangan").length,
+        libur: absensiTeknisi.filter((a) => a.status === "Libur").length,
+      };
+    });
+  }
+
   function exportRiwayatBulananAdmin() {
     const header =
       "Bulan,NIK,Teknisi,Service Area,Total Order,Selesai,Pending,Kendala,Aktif,Hadir/Standby,Terlambat,Tanpa Keterangan,Libur\n";
@@ -1024,21 +1158,7 @@ export default function App() {
       return;
     }
 
-    const data = rekapTeknisiBulanan.map((r) => ({
-      bulan: filterBulanAdmin,
-      nik: r.teknisi.nik,
-      teknisi: r.teknisi.nama,
-      serviceArea: r.teknisi.serviceArea,
-      totalOrder: r.totalOrder,
-      selesai: r.selesai,
-      pending: r.pending,
-        kendala: r.kendala,
-      aktif: r.aktif,
-      hadir: r.hadir,
-      telat: r.telat,
-      tanpaKeterangan: r.tanpaKeterangan,
-      libur: r.libur,
-    }));
+    const data = buatDataRiwayatBulanan(absensi, orders, filterBulanAdmin);
 
     try {
       await fetch(GOOGLE_SCRIPT_URL, {
@@ -1726,9 +1846,6 @@ export default function App() {
               <div className="card">
                 <h2>Rekap Absensi</h2>
                 <button onClick={exportAbsensi}>Export Absensi CSV</button>
-                <button onClick={() => uploadKeGoogleSheet("absensi")}>
-                  Upload Absensi ke Google Sheet
-                </button>
 
                 {absensi.length === 0 && <p>Belum ada absensi.</p>}
 
@@ -1768,9 +1885,6 @@ export default function App() {
               <div className="card">
                 <h2>Rekap Order</h2>
                 <button onClick={exportOrder}>Export Order CSV</button>
-                <button onClick={() => uploadKeGoogleSheet("order")}>
-                  Upload Order ke Google Sheet
-                </button>
 
                 {orders.length === 0 && <p>Belum ada order.</p>}
 
@@ -1840,9 +1954,6 @@ export default function App() {
 
                 <button onClick={exportRiwayatBulananAdmin}>
                   Export Riwayat Bulanan CSV
-                </button>
-                <button onClick={uploadRiwayatBulananAdmin}>
-                  Upload Riwayat Bulanan ke Google Sheet
                 </button>
 
                 <div className="table-wrap">
@@ -2137,7 +2248,7 @@ export default function App() {
                         onChange={(e) =>
                           updateKeteranganPending(order.noWo, e.target.value)
                         }
-                        placeholder=""
+                        placeholder="Contoh: menunggu material, akses belum dibuka, customer reschedule"
                       />
 
                       <label>Upload Foto Pending</label>
@@ -2170,7 +2281,7 @@ export default function App() {
                         onChange={(e) =>
                           updateKeteranganKendala(order.noWo, e.target.value)
                         }
-                        placeholder=""
+                        placeholder="Contoh: kabel putus, ODP tidak bisa dibuka, redaman tinggi, perangkat rusak"
                       />
 
                       <label>Upload Foto Kendala</label>
