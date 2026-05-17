@@ -259,9 +259,7 @@ export default function App() {
     onError?: () => void
   ) {
     if (!GOOGLE_SCRIPT_URL) {
-      if (!silent) {
-        alert("URL Google Apps Script belum diisi di App.tsx.");
-      }
+      alert("URL Google Apps Script belum diisi di App.tsx.");
       return;
     }
 
@@ -304,7 +302,9 @@ export default function App() {
 
   function loadTeknisiDariGoogleSheet(silent = false) {
     if (!GOOGLE_SCRIPT_URL) {
-      alert("URL Google Apps Script belum diisi di App.tsx.");
+      if (!silent) {
+        alert("URL Google Apps Script belum diisi di App.tsx.");
+      }
       return;
     }
 
@@ -321,11 +321,15 @@ export default function App() {
           }
 
           if (!silent) {
+            if (!silent) {
             alert(`Data teknisi berhasil direfresh. Total: ${result.data.length} teknisi.`);
+          }
           }
         } else {
           if (!silent) {
+            if (!silent) {
             alert(result.message || "Data teknisi tidak ditemukan di sheet NAKER.");
+          }
           }
         }
       } finally {
@@ -342,7 +346,9 @@ export default function App() {
     script.src = `${GOOGLE_SCRIPT_URL}?action=teknisi&callback=${callbackName}`;
     script.onerror = () => {
       if (!silent) {
+        if (!silent) {
         alert("Gagal mengambil data teknisi. Pastikan Web App sudah deploy versi terbaru dan akses Anyone.");
+      }
       }
       delete (window as any)[callbackName];
       script.remove();
@@ -972,6 +978,7 @@ export default function App() {
       totalOrder: orderTeknisi.length,
       selesai: orderTeknisi.filter((o) => ["Selesai", "Approved"].includes(o.status)).length,
       pending: orderTeknisi.filter((o) => o.status === "Pending").length,
+      kendala: orderTeknisi.filter((o) => o.status === "Kendala").length,
       aktif: orderTeknisi.filter(
         (o) => !["Selesai", "Approved", "Ditolak", "Pending", "Kendala"].includes(o.status)
       ).length,
@@ -984,7 +991,7 @@ export default function App() {
 
   function exportRiwayatBulananAdmin() {
     const header =
-      "Bulan,NIK,Teknisi,Service Area,Total Order,Selesai,Pending Kendala,Aktif,Hadir/Standby,Terlambat,Tanpa Keterangan,Libur\n";
+      "Bulan,NIK,Teknisi,Service Area,Total Order,Selesai,Pending,Kendala,Aktif,Hadir/Standby,Terlambat,Tanpa Keterangan,Libur\n";
 
     const isi = rekapTeknisiBulanan
       .map((r) =>
@@ -995,7 +1002,8 @@ export default function App() {
           r.teknisi.serviceArea,
           String(r.totalOrder),
           String(r.selesai),
-          String(r.pendingKendala),
+          String(r.pending),
+          String(r.kendala),
           String(r.aktif),
           String(r.hadir),
           String(r.telat),
@@ -1023,7 +1031,8 @@ export default function App() {
       serviceArea: r.teknisi.serviceArea,
       totalOrder: r.totalOrder,
       selesai: r.selesai,
-      pendingKendala: r.pendingKendala,
+      pending: r.pending,
+        kendala: r.kendala,
       aktif: r.aktif,
       hadir: r.hadir,
       telat: r.telat,
@@ -1271,11 +1280,11 @@ export default function App() {
     if (currentUser?.role === "superadmin") {
       return "Super Admin";
     }
-  
+
     if (role === "admin") {
       return "Admin";
     }
-  
+
     return teknisiTerpilih.nama;
   }
 
@@ -1373,124 +1382,127 @@ export default function App() {
               </button>
             )}
           </div>
+
+
           {tabAdmin === "users" && currentUser?.role === "superadmin" && (
-  <div className="card">
-    <h2>Kelola User Login</h2>
-    <p className="info-text">
-      Menu ini khusus Super Admin. Data disimpan ke Google Sheet tab USERS.
-    </p>
+            <div className="card">
+              <h2>Kelola User Login</h2>
+              <p className="info-text">
+                Menu ini khusus Super Admin. Data disimpan ke Google Sheet tab USERS.
+              </p>
 
-    <div className="grid-2">
-      <div>
-        <label>Role</label>
-        <select
-          value={formUser.role}
-          onChange={(e) =>
-            setFormUser({
-              ...formUser,
-              role: e.target.value as UserAkses["role"],
-            })
-          }
-        >
-          <option value="teknisi">Teknisi</option>
-          <option value="admin">Admin</option>
-          <option value="superadmin">Super Admin</option>
-        </select>
-      </div>
+              <div className="grid-2">
+                <div>
+                  <label>Role</label>
+                  <select
+                    value={formUser.role}
+                    onChange={(e) =>
+                      setFormUser({
+                        ...formUser,
+                        role: e.target.value as UserAkses["role"],
+                      })
+                    }
+                  >
+                    <option value="teknisi">Teknisi</option>
+                    <option value="admin">Admin</option>
+                    <option value="superadmin">Super Admin</option>
+                  </select>
+                </div>
 
-      <div>
-        <label>Active</label>
-        <select
-          value={formUser.active}
-          onChange={(e) =>
-            setFormUser({ ...formUser, active: e.target.value })
-          }
-        >
-          <option value="YA">YA</option>
-          <option value="TIDAK">TIDAK</option>
-        </select>
-      </div>
-    </div>
+                <div>
+                  <label>Active</label>
+                  <select
+                    value={formUser.active}
+                    onChange={(e) =>
+                      setFormUser({ ...formUser, active: e.target.value })
+                    }
+                  >
+                    <option value="YA">YA</option>
+                    <option value="TIDAK">TIDAK</option>
+                  </select>
+                </div>
+              </div>
 
-    <label>NIK</label>
-    <input
-      value={formUser.nik}
-      onChange={(e) =>
-        setFormUser({ ...formUser, nik: e.target.value })
-      }
-      placeholder="Contoh: 16070476"
-    />
+              <label>NIK</label>
+              <input
+                value={formUser.nik}
+                onChange={(e) =>
+                  setFormUser({ ...formUser, nik: e.target.value })
+                }
+                placeholder="Contoh: 16070476"
+              />
 
-    <label>Nama</label>
-    <input
-      value={formUser.nama}
-      onChange={(e) =>
-        setFormUser({ ...formUser, nama: e.target.value })
-      }
-      placeholder="Nama user"
-    />
+              <label>Nama</label>
+              <input
+                value={formUser.nama}
+                onChange={(e) =>
+                  setFormUser({ ...formUser, nama: e.target.value })
+                }
+                placeholder="Nama user"
+              />
 
-    <label>PIN</label>
-    <input
-      value={formUser.pin}
-      onChange={(e) =>
-        setFormUser({ ...formUser, pin: e.target.value })
-      }
-      placeholder="Wajib untuk admin/super admin, teknisi boleh kosong"
-    />
+              <label>PIN</label>
+              <input
+                value={formUser.pin}
+                onChange={(e) =>
+                  setFormUser({ ...formUser, pin: e.target.value })
+                }
+                placeholder="Wajib untuk admin/super admin, teknisi boleh kosong"
+              />
 
-    <label>Catatan</label>
-    <textarea
-      value={formUser.catatan}
-      onChange={(e) =>
-        setFormUser({ ...formUser, catatan: e.target.value })
-      }
-      placeholder="Catatan opsional"
-    />
+              <label>Catatan</label>
+              <textarea
+                value={formUser.catatan}
+                onChange={(e) =>
+                  setFormUser({ ...formUser, catatan: e.target.value })
+                }
+                placeholder="Catatan opsional"
+              />
 
-    <button onClick={simpanUser}>Simpan User</button>
-    <button onClick={resetFormUser}>Reset Form</button>
-    <button onClick={() => loadUsers()}>Refresh User</button>
+              <button onClick={simpanUser}>Simpan User</button>
+              <button onClick={resetFormUser}>Reset Form</button>
+              <button onClick={() => loadUsers()}>Refresh User</button>
 
-    <div className="table-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th>Role</th>
-            <th>NIK</th>
-            <th>Nama</th>
-            <th>PIN</th>
-            <th>Active</th>
-            <th>Catatan</th>
-            <th>Aksi</th>
-          </tr>
-        </thead>
-        <tbody>
-          {users.map((user) => (
-            <tr key={`${user.role}-${user.nik}`}>
-              <td>{user.role}</td>
-              <td>{user.nik}</td>
-              <td>{user.nama}</td>
-              <td>{user.pin || "-"}</td>
-              <td>{user.active}</td>
-              <td>{user.catatan || "-"}</td>
-              <td>
-                <button onClick={() => editUser(user)}>Edit</button>
-                <button onClick={() => hapusUser(user.nik)}>Hapus</button>
-              </td>
-            </tr>
-          ))}
+              <div className="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Role</th>
+                      <th>NIK</th>
+                      <th>Nama</th>
+                      <th>PIN</th>
+                      <th>Active</th>
+                      <th>Catatan</th>
+                      <th>Aksi</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {users.map((user) => (
+                      <tr key={`${user.role}-${user.nik}`}>
+                        <td>{user.role}</td>
+                        <td>{user.nik}</td>
+                        <td>{user.nama}</td>
+                        <td>{user.pin || "-"}</td>
+                        <td>{user.active}</td>
+                        <td>{user.catatan || "-"}</td>
+                        <td>
+                          <button onClick={() => editUser(user)}>Edit</button>
+                          <button onClick={() => hapusUser(user.nik)}>Hapus</button>
+                        </td>
+                      </tr>
+                    ))}
 
-          {users.length === 0 && (
-            <tr>
-              <td colSpan={7}>Belum ada user atau belum direfresh.</td>
-            </tr>
+                    {users.length === 0 && (
+                      <tr>
+                        <td colSpan={7}>Belum ada user atau belum direfresh.</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
           )}
-        </tbody>
-      </table>
-    </div>
-  </div>
-)}
+
           {tabAdmin === "dashboard" && (
             <>
               <div className="grid-4">
@@ -1842,7 +1854,8 @@ export default function App() {
                         <th>Service Area</th>
                         <th>Total Order</th>
                         <th>Selesai</th>
-                        <th>Pending Kendala</th>
+                        <th>Pending</th>
+                  <th>Kendala</th>
                         <th>Aktif</th>
                         <th>Hadir/Standby</th>
                         <th>Terlambat</th>
@@ -1858,7 +1871,8 @@ export default function App() {
                           <td>{r.teknisi.serviceArea || "-"}</td>
                           <td>{r.totalOrder}</td>
                           <td>{r.selesai}</td>
-                          <td>{r.pendingKendala}</td>
+                          <td>{r.pending}</td>
+                    <td>{r.kendala}</td>
                           <td>{r.aktif}</td>
                           <td>{r.hadir}</td>
                           <td>{r.telat}</td>
