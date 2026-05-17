@@ -68,10 +68,11 @@ type Order = {
   keteranganKendala?: string;
 };
 
-const GOOGLE_SCRIPT_URL_VALUE =
-  "https://script.google.com/macros/s/AKfycbxYIPOPCejUNTaAF1k7URM-NJsGlC9037YeK-1EzbfsEcqlEZG-4c8966QWDWYXDfE7VQ/exec";
+const GOOGLE_SCRIPT_URL: string = String(
+  "https://script.google.com/macros/s/AKfycbxYIPOPCejUNTaAF1k7URM-NJsGlC9037YeK-1EzbfsEcqlEZG-4c8966QWDWYXDfE7VQ/exec"
+);
 
-const GOOGLE_SCRIPT_URL: string = GOOGLE_SCRIPT_URL_VALUE;
+const API_TOKEN: string = "";
 
 // Login user diambil dari Google Sheet USERS melalui Apps Script.
 type LoginUser = {
@@ -225,7 +226,7 @@ export default function App() {
   }, []);
 
   function loadTeknisiDariGoogleSheet() {
-    if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL === "PASTE_URL_WEB_APP_DI_SINI") {
+    if (!GOOGLE_SCRIPT_URL) {
       alert("URL Google Apps Script belum diisi di App.tsx.");
       return;
     }
@@ -422,7 +423,7 @@ export default function App() {
   }
 
   async function kirimNotifOrderTelegram(order: Order) {
-    if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL === "PASTE_URL_WEB_APP_DI_SINI") {
+    if (!GOOGLE_SCRIPT_URL) {
       return;
     }
 
@@ -449,7 +450,7 @@ export default function App() {
   }
 
   async function kirimNotifStatusTelegram(order: Order, status: string) {
-    if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL === "PASTE_URL_WEB_APP_DI_SINI") {
+    if (!GOOGLE_SCRIPT_URL) {
       return;
     }
 
@@ -800,7 +801,7 @@ export default function App() {
   }
 
   async function uploadKeGoogleSheet(type: "absensi" | "order") {
-    if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL === "PASTE_URL_WEB_APP_DI_SINI") {
+    if (!GOOGLE_SCRIPT_URL) {
       alert("URL Google Apps Script belum diisi di App.tsx.");
       return;
     }
@@ -920,7 +921,7 @@ export default function App() {
   }
 
   async function uploadRiwayatBulananAdmin() {
-    if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL === "PASTE_URL_WEB_APP_DI_SINI") {
+    if (!GOOGLE_SCRIPT_URL) {
       alert("URL Google Apps Script belum diisi di App.tsx.");
       return;
     }
@@ -961,7 +962,7 @@ export default function App() {
   }
 
   function loginUser() {
-    if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL === "PASTE_URL_WEB_APP_DI_SINI") {
+    if (!GOOGLE_SCRIPT_URL) {
       setLoginError("URL Google Apps Script belum diisi di App.tsx.");
       return;
     }
