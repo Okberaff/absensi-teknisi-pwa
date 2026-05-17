@@ -85,8 +85,18 @@ type LoginUser = {
   nama: string;
 };
 
+type UserAkses = {
+  role: "superadmin" | "admin" | "teknisi";
+  nik: string;
+  pin: string;
+  nama: string;
+  active: string;
+  catatan: string;
+  updatedAt: string;
+};
+
 type Role = "" | "admin" | "teknisi";
-type TabAdmin = "dashboard" | "order" | "teknisi" | "rekap" | "riwayatBulanan";
+type TabAdmin = "dashboard" | "order" | "teknisi" | "rekap" | "riwayatBulanan" | "users";
 type TabTeknisi = "absen" | "order" | "riwayat";
 
 const teknisiAwal: Teknisi[] = [
@@ -188,6 +198,7 @@ export default function App() {
   const [loginPin, setLoginPin] = useState("");
   const [loginError, setLoginError] = useState("");
   const [currentUser, setCurrentUser] = useState<LoginUser | null>(null);
+  const [currentPin, setCurrentPin] = useState("");
 
   const [tabAdmin, setTabAdmin] = useState<TabAdmin>("dashboard");
   const [tabTeknisi, setTabTeknisi] = useState<TabTeknisi>("absen");
@@ -199,6 +210,17 @@ export default function App() {
 
   const [absensi, setAbsensi] = useState<Absensi[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
+
+  const [users, setUsers] = useState<UserAkses[]>([]);
+  const [formUser, setFormUser] = useState<UserAkses>({
+    role: "teknisi",
+    nik: "",
+    pin: "",
+    nama: "",
+    active: "YA",
+    catatan: "",
+    updatedAt: "",
+  });
 
   const teknisiTerpilih =
     teknisi.find((t) => t.id === pilihTeknisiId) || teknisi[0];
@@ -228,6 +250,55 @@ export default function App() {
   useEffect(() => {
     loadTeknisiDariGoogleSheet();
   }, []);
+
+
+  function panggilGoogleScriptJsonp(
+    action: string,
+    params: Record<string, string>,
+    onResult: (result: any) => void,
+    onError?: () => void
+  ) {
+    if (!GOOGLE_SCRIPT_URL) {
+      alert("URL Google Apps Script belum diisi di App.tsx.");
+      return;
+    }
+
+    const callbackName = "callback" + action.replace(/[^a-zA-Z0-9]/g, "") + Date.now();
+
+    (window as any)[callbackName] = (result: any) => {
+      try {
+        onResult(result);
+      } finally {
+        delete (window as any)[callbackName];
+        const script = document.getElementById(callbackName);
+        if (script) {
+          script.remove();
+        }
+      }
+    };
+
+    const query = new URLSearchParams({
+      action,
+      callback: callbackName,
+      ...params,
+    });
+
+    const script = document.createElement("script");
+    script.id = callbackName;
+    script.src = `${GOOGLE_SCRIPT_URL}?${query.toString()}`;
+    script.onerror = () => {
+      delete (window as any)[callbackName];
+      script.remove();
+
+      if (onError) {
+        onError();
+      } else {
+        alert("Gagal menghubungi Google Apps Script.");
+      }
+    };
+
+    document.body.appendChild(script);
+  }
 
   function loadTeknisiDariGoogleSheet() {
     if (!GOOGLE_SCRIPT_URL) {
@@ -892,7 +963,7 @@ export default function App() {
       teknisi: t,
       totalOrder: orderTeknisi.length,
       selesai: orderTeknisi.filter((o) => ["Selesai", "Approved"].includes(o.status)).length,
-      pending: orderTeknisi.filter((o) => o.status === "Pending").length,
+      pendingKendala: orderTeknisi.filter((o) => ["Pending", "Kendala"].includes(o.status)).length,
       aktif: orderTeknisi.filter(
         (o) => !["Selesai", "Approved", "Ditolak", "Pending", "Kendala"].includes(o.status)
       ).length,
@@ -905,7 +976,7 @@ export default function App() {
 
   function exportRiwayatBulananAdmin() {
     const header =
-      "Bulan,NIK,Teknisi,Service Area,Total Order,Selesai,Pending,Aktif,Hadir/Standby,Terlambat,Tanpa Keterangan,Libur\n";
+      "Bulan,NIK,Teknisi,Service Area,Total Order,Selesai,Pending Kendala,Aktif,Hadir/Standby,Terlambat,Tanpa Keterangan,Libur\n";
 
     const isi = rekapTeknisiBulanan
       .map((r) =>
@@ -916,7 +987,7 @@ export default function App() {
           r.teknisi.serviceArea,
           String(r.totalOrder),
           String(r.selesai),
-          String(r.pending),
+          String(r.pendingKendala),
           String(r.aktif),
           String(r.hadir),
           String(r.telat),
@@ -944,7 +1015,7 @@ export default function App() {
       serviceArea: r.teknisi.serviceArea,
       totalOrder: r.totalOrder,
       selesai: r.selesai,
-      pending: r.pending,
+      pendingKendala: r.pendingKendala,
       aktif: r.aktif,
       hadir: r.hadir,
       telat: r.telat,
@@ -1014,8 +1085,14 @@ export default function App() {
         }
 
         setCurrentUser(user);
+        setCurrentPin(pin);
         setIsLoggedIn(true);
         setLoginError("");
+
+        if (user.role === "superadmin") {
+          loadUsers(user, pin);
+        }
+
         setLoginPin("");
       } finally {
         delete (window as any)[callbackName];
@@ -1050,8 +1127,136 @@ export default function App() {
     setLoginPin("");
     setLoginError("");
     setCurrentUser(null);
+    setCurrentPin("");
+    setUsers([]);
     setTabAdmin("dashboard");
     setTabTeknisi("absen");
+  }
+
+
+  function resetFormUser() {
+    setFormUser({
+      role: "teknisi",
+      nik: "",
+      pin: "",
+      nama: "",
+      active: "YA",
+      catatan: "",
+      updatedAt: "",
+    });
+  }
+
+  function loadUsers(userParam?: LoginUser, pinParam?: string) {
+    const user = userParam || currentUser;
+    const pin = pinParam ?? currentPin;
+
+    if (!user || user.role !== "superadmin") {
+      return;
+    }
+
+    panggilGoogleScriptJsonp(
+      "users",
+      {
+        authNik: user.nik,
+        authPin: pin,
+      },
+      (result) => {
+        if (result.ok) {
+          setUsers(result.data || []);
+        } else {
+          alert(result.message || "Gagal mengambil data user.");
+        }
+      }
+    );
+  }
+
+  function editUser(user: UserAkses) {
+    setFormUser({
+      role: user.role,
+      nik: user.nik,
+      pin: user.pin || "",
+      nama: user.nama || "",
+      active: user.active || "YA",
+      catatan: user.catatan || "",
+      updatedAt: user.updatedAt || "",
+    });
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function simpanUser() {
+    if (!currentUser || currentUser.role !== "superadmin") {
+      alert("Hanya Super Admin yang bisa kelola user.");
+      return;
+    }
+
+    if (!formUser.nik.trim() || !formUser.nama.trim()) {
+      alert("NIK dan Nama wajib diisi.");
+      return;
+    }
+
+    if (
+      (formUser.role === "admin" || formUser.role === "superadmin") &&
+      !formUser.pin.trim()
+    ) {
+      alert("PIN wajib diisi untuk Admin/Super Admin.");
+      return;
+    }
+
+    panggilGoogleScriptJsonp(
+      "save_user",
+      {
+        authNik: currentUser.nik,
+        authPin: currentPin,
+        role: formUser.role,
+        nik: formUser.nik.trim(),
+        pin: formUser.pin.trim(),
+        nama: formUser.nama.trim(),
+        active: formUser.active,
+        catatan: formUser.catatan || "",
+      },
+      (result) => {
+        if (result.ok) {
+          alert(result.message || "User berhasil disimpan.");
+          resetFormUser();
+          loadUsers();
+        } else {
+          alert(result.message || "Gagal menyimpan user.");
+        }
+      }
+    );
+  }
+
+  function hapusUser(nik: string) {
+    if (!currentUser || currentUser.role !== "superadmin") {
+      alert("Hanya Super Admin yang bisa hapus user.");
+      return;
+    }
+
+    if (nik === currentUser.nik) {
+      alert("User yang sedang login tidak boleh dihapus.");
+      return;
+    }
+
+    if (!confirm(`Hapus akses login NIK ${nik}?`)) {
+      return;
+    }
+
+    panggilGoogleScriptJsonp(
+      "delete_user",
+      {
+        authNik: currentUser.nik,
+        authPin: currentPin,
+        nik,
+      },
+      (result) => {
+        if (result.ok) {
+          alert(result.message || "User berhasil dihapus.");
+          loadUsers();
+        } else {
+          alert(result.message || "Gagal menghapus user.");
+        }
+      }
+    );
   }
 
   function namaUserLogin() {
@@ -1073,7 +1278,7 @@ export default function App() {
         <div className="card">
           <h2>Login</h2>
           <p className="subtitle">
-          Masukkan NIK untuk login. Khusus admin, masukkan PIN.
+            Teknisi login cukup dengan NIK. Admin login dengan NIK dan PIN 
           </p>
 
           <label>NIK</label>
@@ -1147,6 +1352,17 @@ export default function App() {
             >
               Riwayat Bulanan
             </button>
+            {currentUser?.role === "superadmin" && (
+              <button
+                className={tabAdmin === "users" ? "active" : ""}
+                onClick={() => {
+                  setTabAdmin("users");
+                  loadUsers();
+                }}
+              >
+                Kelola User
+              </button>
+            )}
           </div>
 
           {tabAdmin === "dashboard" && (
@@ -1500,7 +1716,7 @@ export default function App() {
                         <th>Service Area</th>
                         <th>Total Order</th>
                         <th>Selesai</th>
-                        <th>Pending</th>
+                        <th>Pending Kendala</th>
                         <th>Aktif</th>
                         <th>Hadir/Standby</th>
                         <th>Terlambat</th>
@@ -1516,7 +1732,7 @@ export default function App() {
                           <td>{r.teknisi.serviceArea || "-"}</td>
                           <td>{r.totalOrder}</td>
                           <td>{r.selesai}</td>
-                          <td>{r.pending}</td>
+                          <td>{r.pendingKendala}</td>
                           <td>{r.aktif}</td>
                           <td>{r.hadir}</td>
                           <td>{r.telat}</td>

@@ -16,6 +16,30 @@
   <body>
     <div id="root"></div>
 
+    <script>
+      async function bersihkanCacheLama() {
+        try {
+          if ("serviceWorker" in navigator) {
+            const registrations = await navigator.serviceWorker.getRegistrations();
+            for (const registration of registrations) {
+              await registration.unregister();
+            }
+          }
+
+          if ("caches" in window) {
+            const keys = await caches.keys();
+            await Promise.all(keys.map((key) => caches.delete(key)));
+          }
+
+          console.log("Cache lama berhasil dibersihkan otomatis.");
+        } catch (error) {
+          console.log("Gagal membersihkan cache:", error);
+        }
+      }
+
+      bersihkanCacheLama();
+    </script>
+
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
