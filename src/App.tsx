@@ -920,6 +920,48 @@ export default function App() {
     updateStatus(noWo, "Selesai");
   }
 
+
+  const ordersBulanAdmin: Order[] = orders.filter((o) =>
+    cocokBulan(o.tanggal, filterBulanAdmin)
+  );
+
+  const absensiBulanAdmin: Absensi[] = absensi.filter((a) =>
+    cocokBulan(a.tanggal, filterBulanAdmin)
+  );
+
+  const rekapTeknisiBulanan = teknisi.map((t) => {
+    const orderTeknisi = ordersBulanAdmin.filter(
+      (o) => o.nikTeknisi1 === t.nik || o.nikTeknisi2 === t.nik
+    );
+
+    const absensiTeknisi = absensiBulanAdmin.filter((a) => a.nik === t.nik);
+
+    return {
+      teknisi: t,
+      totalOrder: orderTeknisi.length,
+      selesai: orderTeknisi.filter((o) => ["Selesai", "Approved"].includes(o.status)).length,
+      pending: orderTeknisi.filter((o) => o.status === "Pending").length,
+      kendala: orderTeknisi.filter((o) => o.status === "Kendala").length,
+      aktif: orderTeknisi.filter(
+        (o) => !["Selesai", "Approved", "Ditolak", "Pending", "Kendala"].includes(o.status)
+      ).length,
+      hadir: absensiTeknisi.filter((a) => ["Hadir", "Standby"].includes(a.status)).length,
+      telat: absensiTeknisi.filter((a) => a.status === "Terlambat").length,
+      tanpaKeterangan: absensiTeknisi.filter((a) => a.status === "Tanpa Keterangan").length,
+      libur: absensiTeknisi.filter((a) => a.status === "Libur").length,
+    };
+  });
+
+  const ordersBulanTeknisi: Order[] = orders.filter(
+    (o) =>
+      cocokBulan(o.tanggal, filterBulanTeknisi) &&
+      (o.nikTeknisi1 === teknisiTerpilih.nik || o.nikTeknisi2 === teknisiTerpilih.nik)
+  );
+
+  const absensiBulanTeknisi: Absensi[] = absensi.filter(
+    (a) => cocokBulan(a.tanggal, filterBulanTeknisi) && a.nik === teknisiTerpilih.nik
+  );
+
   function exportAbsensi() {
     const header =
       "Tanggal,Jam,NIK,Teknisi,Service Area,Status,Lokasi Manual,Latitude,Longitude,Google Maps,Foto Selfie,Catatan\n";
@@ -950,7 +992,7 @@ export default function App() {
 
   function exportOrder() {
     const header =
-      "Tanggal,Jam Order,No WO,ODP,Teknisi 1,NIK Teknisi 1,Service Area Teknisi 1,Teknisi 2,NIK Teknisi 2,Service Area Teknisi 2,Jenis Pekerjaan,Dikirim Oleh,NIK Pengirim,Role Pengirim,Status,Jam Terima,Jam Berangkat,Jam Checkin,Checkin Latitude,Checkin Longitude,Checkin Google Maps,Jam Proses,Jam Selesai,Keterangan Pending,Jumlah Foto Pending,Keterangan Kendala,Jumlah Foto Kendala,Jumlah Foto Lapangan,Jumlah Foto Hasil,Catatan\n";
+      "Tanggal,Jam Order,No WO,ODP,Teknisi 1,NIK Teknisi 1,Service Area Teknisi 1,Teknisi 2,NIK Teknisi 2,Service Area Teknisi 2,Jenis Pekerjaan,Dikirim Oleh,NIK Pengirim,Status,Jam Terima,Jam Berangkat,Jam Checkin,Checkin Latitude,Checkin Longitude,Checkin Google Maps,Jam Proses,Jam Selesai,Keterangan Pending,Jumlah Foto Pending,Keterangan Kendala,Jumlah Foto Kendala,Jumlah Foto Lapangan,Jumlah Foto Hasil,Catatan\n";
 
     const isi = orders
       .map((o) =>
@@ -968,7 +1010,6 @@ export default function App() {
           o.jenisPekerjaan,
           o.dibuatOleh || "",
           o.nikPembuat || "",
-          o.rolePembuat || "",
           o.status,
           o.jamTerima || "",
           o.jamBerangkat || "",
