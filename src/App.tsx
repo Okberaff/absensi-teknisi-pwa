@@ -248,7 +248,7 @@ export default function App() {
   });
 
   useEffect(() => {
-    loadTeknisiDariGoogleSheet();
+    loadTeknisiDariGoogleSheet(true);
   }, []);
 
 
@@ -259,7 +259,9 @@ export default function App() {
     onError?: () => void
   ) {
     if (!GOOGLE_SCRIPT_URL) {
-      alert("URL Google Apps Script belum diisi di App.tsx.");
+      if (!silent) {
+        alert("URL Google Apps Script belum diisi di App.tsx.");
+      }
       return;
     }
 
@@ -300,7 +302,7 @@ export default function App() {
     document.body.appendChild(script);
   }
 
-  function loadTeknisiDariGoogleSheet() {
+  function loadTeknisiDariGoogleSheet(silent = false) {
     if (!GOOGLE_SCRIPT_URL) {
       alert("URL Google Apps Script belum diisi di App.tsx.");
       return;
@@ -318,9 +320,13 @@ export default function App() {
             setPilihTeknisiId(result.data[0].id);
           }
 
-          alert(`Data teknisi berhasil direfresh. Total: ${result.data.length} teknisi.`);
+          if (!silent) {
+            alert(`Data teknisi berhasil direfresh. Total: ${result.data.length} teknisi.`);
+          }
         } else {
-          alert(result.message || "Data teknisi tidak ditemukan di sheet NAKER.");
+          if (!silent) {
+            alert(result.message || "Data teknisi tidak ditemukan di sheet NAKER.");
+          }
         }
       } finally {
         delete (window as any)[callbackName];
@@ -335,7 +341,9 @@ export default function App() {
     script.id = callbackName;
     script.src = `${GOOGLE_SCRIPT_URL}?action=teknisi&callback=${callbackName}`;
     script.onerror = () => {
-      alert("Gagal mengambil data teknisi. Pastikan Web App sudah deploy versi terbaru dan akses Anyone.");
+      if (!silent) {
+        alert("Gagal mengambil data teknisi. Pastikan Web App sudah deploy versi terbaru dan akses Anyone.");
+      }
       delete (window as any)[callbackName];
       script.remove();
     };
@@ -963,7 +971,7 @@ export default function App() {
       teknisi: t,
       totalOrder: orderTeknisi.length,
       selesai: orderTeknisi.filter((o) => ["Selesai", "Approved"].includes(o.status)).length,
-      pendingKendala: orderTeknisi.filter((o) => ["Pending", "Kendala"].includes(o.status)).length,
+      pending: orderTeknisi.filter((o) => o.status === "Pending").length,
       aktif: orderTeknisi.filter(
         (o) => !["Selesai", "Approved", "Ditolak", "Pending", "Kendala"].includes(o.status)
       ).length,
@@ -1198,7 +1206,7 @@ export default function App() {
       (formUser.role === "admin" || formUser.role === "superadmin") &&
       !formUser.pin.trim()
     ) {
-      alert("PIN wajib diisi untuk Admin/Super Admin.");
+      alert("PIN wajib diisi untuk Admin.");
       return;
     }
 
@@ -1263,22 +1271,23 @@ export default function App() {
     if (currentUser?.role === "superadmin") {
       return "Super Admin";
     }
-
+  
     if (role === "admin") {
       return "Admin";
     }
-
+  
     return teknisiTerpilih.nama;
   }
 
   return (
     <div className="container">
       <h1>Absensi & Job Order Teknisi</h1>
+
       {!isLoggedIn && (
         <div className="card">
           <h2>Login</h2>
           <p className="subtitle">
-            Teknisi login cukup dengan NIK. Admin login dengan NIK dan PIN 
+            Masukkan NIK untuk login. Khusus admin, masukkan PIN.
           </p>
 
           <label>NIK</label>
@@ -1293,7 +1302,7 @@ export default function App() {
             type="password"
             value={loginPin}
             onChange={(e) => setLoginPin(e.target.value)}
-            placeholder="Khusus admin"
+            placeholder="Masukkan PIN admin"
           />
 
           {loginError && <p className="error-text">{loginError}</p>}
@@ -1364,7 +1373,124 @@ export default function App() {
               </button>
             )}
           </div>
+          {tabAdmin === "users" && currentUser?.role === "superadmin" && (
+  <div className="card">
+    <h2>Kelola User Login</h2>
+    <p className="info-text">
+      Menu ini khusus Super Admin. Data disimpan ke Google Sheet tab USERS.
+    </p>
 
+    <div className="grid-2">
+      <div>
+        <label>Role</label>
+        <select
+          value={formUser.role}
+          onChange={(e) =>
+            setFormUser({
+              ...formUser,
+              role: e.target.value as UserAkses["role"],
+            })
+          }
+        >
+          <option value="teknisi">Teknisi</option>
+          <option value="admin">Admin</option>
+          <option value="superadmin">Super Admin</option>
+        </select>
+      </div>
+
+      <div>
+        <label>Active</label>
+        <select
+          value={formUser.active}
+          onChange={(e) =>
+            setFormUser({ ...formUser, active: e.target.value })
+          }
+        >
+          <option value="YA">YA</option>
+          <option value="TIDAK">TIDAK</option>
+        </select>
+      </div>
+    </div>
+
+    <label>NIK</label>
+    <input
+      value={formUser.nik}
+      onChange={(e) =>
+        setFormUser({ ...formUser, nik: e.target.value })
+      }
+      placeholder="Contoh: 16070476"
+    />
+
+    <label>Nama</label>
+    <input
+      value={formUser.nama}
+      onChange={(e) =>
+        setFormUser({ ...formUser, nama: e.target.value })
+      }
+      placeholder="Nama user"
+    />
+
+    <label>PIN</label>
+    <input
+      value={formUser.pin}
+      onChange={(e) =>
+        setFormUser({ ...formUser, pin: e.target.value })
+      }
+      placeholder="Wajib untuk admin/super admin, teknisi boleh kosong"
+    />
+
+    <label>Catatan</label>
+    <textarea
+      value={formUser.catatan}
+      onChange={(e) =>
+        setFormUser({ ...formUser, catatan: e.target.value })
+      }
+      placeholder="Catatan opsional"
+    />
+
+    <button onClick={simpanUser}>Simpan User</button>
+    <button onClick={resetFormUser}>Reset Form</button>
+    <button onClick={() => loadUsers()}>Refresh User</button>
+
+    <div className="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Role</th>
+            <th>NIK</th>
+            <th>Nama</th>
+            <th>PIN</th>
+            <th>Active</th>
+            <th>Catatan</th>
+            <th>Aksi</th>
+          </tr>
+        </thead>
+        <tbody>
+          {users.map((user) => (
+            <tr key={`${user.role}-${user.nik}`}>
+              <td>{user.role}</td>
+              <td>{user.nik}</td>
+              <td>{user.nama}</td>
+              <td>{user.pin || "-"}</td>
+              <td>{user.active}</td>
+              <td>{user.catatan || "-"}</td>
+              <td>
+                <button onClick={() => editUser(user)}>Edit</button>
+                <button onClick={() => hapusUser(user.nik)}>Hapus</button>
+              </td>
+            </tr>
+          ))}
+
+          {users.length === 0 && (
+            <tr>
+              <td colSpan={7}>Belum ada user atau belum direfresh.</td>
+            </tr>
+          )}
+        </tbody>
+      </table>
+    </div>
+  </div>
+)}
           {tabAdmin === "dashboard" && (
             <>
               <div className="grid-4">
@@ -1554,7 +1680,7 @@ export default function App() {
                   User login dikelola di Google Sheet tab USERS. Super Admin bisa ubah NIK admin, PIN admin, dan NIK teknisi yang boleh login di tab tersebut.
                 </p>
               )}
-              <button onClick={loadTeknisiDariGoogleSheet}>
+              <button onClick={() => loadTeknisiDariGoogleSheet(false)}>
                 Refresh Data Teknisi dari Sheet NAKER
               </button>
 
