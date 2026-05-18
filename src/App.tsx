@@ -70,6 +70,7 @@ type Order = {
   fotoPending: FotoItem[];
   fotoKendala: FotoItem[];
   kmlFiles?: FotoItem[];
+  linkFolderFoto?: string;
   keteranganPending?: string;
   keteranganKendala?: string;
 };
@@ -442,6 +443,7 @@ function AppContent() {
               fotoPending: Array.isArray(o.fotoPending) ? o.fotoPending : [],
               fotoKendala: Array.isArray(o.fotoKendala) ? o.fotoKendala : [],
               kmlFiles: Array.isArray(o.kmlFiles) ? o.kmlFiles : [],
+              linkFolderFoto: String(o.linkFolderFoto || ""),
               keteranganPending: String(o.keteranganPending || ""),
               keteranganKendala: String(o.keteranganKendala || ""),
             }))
@@ -707,6 +709,7 @@ function AppContent() {
       fotoPending: [],
       fotoKendala: [],
       kmlFiles: formOrder.jenisPekerjaan.toUpperCase() === "NEW ODP" ? formOrder.kmlFiles : [],
+      linkFolderFoto: "",
       keteranganPending: "",
       keteranganKendala: "",
     }));
@@ -1835,6 +1838,17 @@ function AppContent() {
                     <p>Foto Lapangan: {order.fotoLapangan.length}</p>
                     <p>Foto Hasil: {order.fotoHasil.length}</p>
                     <p>File KML/KMZ: {order.kmlFiles?.length || 0}</p>
+                    {order.jenisPekerjaan.toUpperCase() === "NEW ODP" && order.kmlFiles && order.kmlFiles.length > 0 && (
+                      <ul>
+                        {order.kmlFiles.map((file, index) => (
+                          <li key={`${file.name}-${index}`}>
+                            <a href={file.dataUrl} download={file.name || `file-kml-${index + 1}.kml`}>
+                              Download {file.name || `File KML/KMZ ${index + 1}`}
+                            </a>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
                     <p>Catatan: {order.catatan || "-"}</p>
 
                     {order.status === "Selesai" && (
@@ -1910,6 +1924,7 @@ function AppContent() {
                 <option value="">Pilih jenis pekerjaan</option>
                 <option value="EXPAND">EXPAND</option>
                 <option value="NEW ODP">NEW ODP</option>
+                <option value="INSERT CORE">INSERT CORE</option>
               </select>
 
               {formOrder.jenisPekerjaan.toUpperCase() === "NEW ODP" && (
@@ -2057,6 +2072,31 @@ function AppContent() {
                     </div>
                     <p>Tanggal: {order.tanggal}</p>
                     <p>Jam Order: {order.jamOrder}</p>
+
+                  {order.jenisPekerjaan.toUpperCase() === "NEW ODP" && (
+                    <div className="kml-box">
+                      <b>File KML/KMZ:</b>
+                      {order.kmlFiles && order.kmlFiles.length > 0 ? (
+                        <ul>
+                          {order.kmlFiles.map((file, index) => (
+                            <li key={`${file.name}-${index}`}>
+                              <a href={file.dataUrl} download={file.name || `file-kml-${index + 1}.kml`}>
+                                Download {file.name || `File KML/KMZ ${index + 1}`}
+                              </a>
+                            </li>
+                          ))}
+                        </ul>
+                      ) : order.linkFolderFoto ? (
+                        <p>
+                          <a href={order.linkFolderFoto} target="_blank">
+                            Buka Folder KML/Foto
+                          </a>
+                        </p>
+                      ) : (
+                        <p>-</p>
+                      )}
+                    </div>
+                  )}
                     <p>ODP: {order.odp}</p>
                     <p>Teknisi 1: {order.teknisi1}</p>
                     <p>NIK Teknisi 1: {order.nikTeknisi1}</p>
@@ -2189,6 +2229,17 @@ function AppContent() {
                     <p>Foto Lapangan: {order.fotoLapangan.length}</p>
                     <p>Foto Hasil: {order.fotoHasil.length}</p>
                     <p>File KML/KMZ: {order.kmlFiles?.length || 0}</p>
+                    {order.jenisPekerjaan.toUpperCase() === "NEW ODP" && order.kmlFiles && order.kmlFiles.length > 0 && (
+                      <ul>
+                        {order.kmlFiles.map((file, index) => (
+                          <li key={`${file.name}-${index}`}>
+                            <a href={file.dataUrl} download={file.name || `file-kml-${index + 1}.kml`}>
+                              Download {file.name || `File KML/KMZ ${index + 1}`}
+                            </a>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
                     {order.checkinMapUrl && (
                       <p>
                         <a href={order.checkinMapUrl} target="_blank">
