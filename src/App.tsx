@@ -515,28 +515,6 @@ function AppContent() {
   }
 
 
-  async function autoUploadKeGoogleSheet(type: "absensi" | "order", data: Absensi[] | Order[]) {
-    if (!GOOGLE_SCRIPT_URL) {
-      return;
-    }
-
-    try {
-      await fetch(GOOGLE_SCRIPT_URL, {
-        method: "POST",
-        mode: "no-cors",
-        headers: {
-          "Content-Type": "text/plain;charset=utf-8",
-        },
-        body: JSON.stringify({
-          token: API_TOKEN,
-          type,
-          data,
-        }),
-      });
-    } catch (error) {
-      console.log("Auto upload ke Google Sheet gagal", error);
-    }
-  }
 
 
   function buatDataRiwayatBulanan(
@@ -574,31 +552,6 @@ function AppContent() {
     });
   }
 
-  async function autoUploadRiwayatBulanan(absensiData: Absensi[], orderData: Order[]) {
-    if (!GOOGLE_SCRIPT_URL) {
-      return;
-    }
-
-    const bulan = bulanIni();
-    const data = buatDataRiwayatBulanan(absensiData, orderData, bulan);
-
-    try {
-      await fetch(GOOGLE_SCRIPT_URL, {
-        method: "POST",
-        mode: "no-cors",
-        headers: {
-          "Content-Type": "text/plain;charset=utf-8",
-        },
-        body: JSON.stringify({
-          token: API_TOKEN,
-          type: "riwayat_bulanan",
-          data,
-        }),
-      });
-    } catch (error) {
-      console.log("Auto upload riwayat bulanan gagal", error);
-    }
-  }
 
   function kirimAbsen() {
     const sudahAbsen = absensi.find(
@@ -642,8 +595,6 @@ function AppContent() {
 
     const nextAbsensi = [data, ...absensi];
     setAbsensi(nextAbsensi);
-    autoUploadKeGoogleSheet("absensi", nextAbsensi);
-    autoUploadRiwayatBulanan(nextAbsensi, orders);
     setFormAbsen({
       status: "Hadir",
       lokasi: "",
@@ -710,8 +661,6 @@ function AppContent() {
 
     const nextOrders = [data, ...orders];
     setOrders(nextOrders);
-    autoUploadKeGoogleSheet("order", nextOrders);
-    autoUploadRiwayatBulanan(absensi, nextOrders);
 
     setFormOrder({
       noWo: "",
@@ -810,8 +759,6 @@ function AppContent() {
 
     const nextAbsensi = [data, ...absensi];
     setAbsensi(nextAbsensi);
-    autoUploadKeGoogleSheet("absensi", nextAbsensi);
-    autoUploadRiwayatBulanan(nextAbsensi, orders);
   }
 
   function updateStatus(noWo: string, status: string) {
@@ -834,8 +781,6 @@ function AppContent() {
     });
 
     setOrders(nextOrders);
-    autoUploadKeGoogleSheet("order", nextOrders);
-    autoUploadRiwayatBulanan(absensi, nextOrders);
 
     if (updatedOrderForNotif && ["Berangkat", "Proses", "Selesai"].includes(status)) {
       kirimNotifStatusTelegram(updatedOrderForNotif, status);
@@ -868,8 +813,6 @@ function AppContent() {
         );
 
         setOrders(nextOrders);
-        autoUploadKeGoogleSheet("order", nextOrders);
-        autoUploadRiwayatBulanan(absensi, nextOrders);
 
         alert("Check-in berhasil. Titik koordinat sudah tersimpan.");
       },
@@ -1126,6 +1069,58 @@ function AppContent() {
   const absensiBulanTeknisi: Absensi[] = absensi.filter(
     (a) => cocokBulan(a.tanggal, filterBulanTeknisi) && a.nik === teknisiTerpilih.nik
   );
+
+
+  async function uploadKeGoogleSheet(type: "absensi" | "order") {
+    if (!GOOGLE_SCRIPT_URL) {
+      alert("URL Google Apps Script belum diisi di App.tsx.");
+      return;
+    }
+
+    const data = type === "absensi" ? absensi : orders;
+
+    if (data.length === 0) {
+      alert(type === "absensi" ? "Belum ada data absensi untuk diupload." : "Belum ada data order untuk diupload.");
+      return;
+    }
+
+    try {
+      await fetch(GOOGLE_SCRIPT_URL, {
+        method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({ token: API_TOKEN, type, data }),
+      });
+
+      alert(type === "absensi"
+        ? "Absensi dikirim ke Google Sheet. Cek sheet REKAP_ABSENSI."
+        : "Order dikirim ke Google Sheet. Cek sheet REKAP_ORDER dan ORDER_STATUS.");
+    } catch (error) {
+      alert("Gagal mengirim data ke Google Sheet.");
+    }
+  }
+
+  async function uploadRiwayatBulananAdmin() {
+    if (!GOOGLE_SCRIPT_URL) {
+      alert("URL Google Apps Script belum diisi di App.tsx.");
+      return;
+    }
+
+    const data = buatDataRiwayatBulanan(absensi, orders, filterBulanAdmin);
+
+    try {
+      await fetch(GOOGLE_SCRIPT_URL, {
+        method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({ token: API_TOKEN, type: "riwayat_bulanan", data }),
+      });
+
+      alert("Riwayat bulanan dikirim ke Google Sheet. Cek sheet RIWAYAT_BULANAN.");
+    } catch (error) {
+      alert("Gagal mengirim riwayat bulanan ke Google Sheet.");
+    }
+  }
 
   function exportAbsensi() {
     const header =
@@ -1920,6 +1915,9 @@ function AppContent() {
               <div className="card">
                 <h2>Rekap Absensi</h2>
                 <button onClick={exportAbsensi}>Export Absensi CSV</button>
+                <button onClick={() => uploadKeGoogleSheet("absensi")}>
+                  Upload Absensi ke Google Sheet
+                </button>
 
                 {absensi.length === 0 && <p>Belum ada absensi.</p>}
 
@@ -1959,6 +1957,9 @@ function AppContent() {
               <div className="card">
                 <h2>Rekap Order</h2>
                 <button onClick={exportOrder}>Export Order CSV</button>
+                <button onClick={() => uploadKeGoogleSheet("order")}>
+                  Upload Order ke Google Sheet
+                </button>
 
                 {orders.length === 0 && <p>Belum ada order.</p>}
 
@@ -2033,6 +2034,9 @@ function AppContent() {
 
                 <button onClick={exportRiwayatBulananAdmin}>
                   Export Riwayat Bulanan CSV
+                </button>
+                <button onClick={uploadRiwayatBulananAdmin}>
+                  Upload Riwayat Bulanan ke Google Sheet
                 </button>
 
                 <div className="table-wrap">
