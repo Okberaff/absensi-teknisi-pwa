@@ -69,6 +69,7 @@ type Order = {
   fotoHasil: FotoItem[];
   fotoPending: FotoItem[];
   fotoKendala: FotoItem[];
+  kmlFiles?: FotoItem[];
   keteranganPending?: string;
   keteranganKendala?: string;
 };
@@ -264,6 +265,8 @@ function AppContent() {
     teknisi2Id: 0,
     jenisPekerjaan: "",
     catatan: "",
+    kmlFiles: [] as FotoItem[],
+    multiOrderText: "",
   });
 
   useEffect(() => {
@@ -438,6 +441,7 @@ function AppContent() {
               fotoHasil: Array.isArray(o.fotoHasil) ? o.fotoHasil : [],
               fotoPending: Array.isArray(o.fotoPending) ? o.fotoPending : [],
               fotoKendala: Array.isArray(o.fotoKendala) ? o.fotoKendala : [],
+              kmlFiles: Array.isArray(o.kmlFiles) ? o.kmlFiles : [],
               keteranganPending: String(o.keteranganPending || ""),
               keteranganKendala: String(o.keteranganKendala || ""),
             }))
@@ -607,14 +611,8 @@ function AppContent() {
   }
 
   async function buatOrder() {
-    if (!formOrder.noWo || !formOrder.odp || !formOrder.jenisPekerjaan) {
-      alert("No. WO, ODP, dan Jenis Pekerjaan wajib diisi.");
-      return;
-    }
-
-    const noWoSudahAda = orders.find((o) => o.noWo === formOrder.noWo);
-    if (noWoSudahAda) {
-      alert("No. WO ini sudah pernah dibuat.");
+    if (!formOrder.jenisPekerjaan) {
+      alert("Jenis Pekerjaan wajib diisi.");
       return;
     }
 
@@ -626,12 +624,65 @@ function AppContent() {
       return;
     }
 
-    const data: Order = {
+    const dariMulti = formOrder.multiOrderText
+      .split("\n")
+      .map((line) => line.trim())
+      .filter(Boolean)
+      .map((line) => {
+        const parts = line
+          .split(/[,\t;]/)
+          .map((part) => part.trim())
+          .filter(Boolean);
+
+        return {
+          noWo: parts[0] || "",
+          odp: "",
+          catatan: parts.slice(1).join(" - "),
+        };
+      })
+      .filter((row) => row.noWo);
+
+    const daftarOrderInput =
+      dariMulti.length > 0
+        ? dariMulti
+        : [
+            {
+              noWo: formOrder.noWo.trim(),
+              odp: "",
+              catatan: "",
+            },
+          ];
+
+    if (daftarOrderInput.length === 0 || daftarOrderInput.some((row) => !row.noWo)) {
+      alert("No. WO wajib diisi. Untuk multi order, isi 1 No. WO per baris.");
+      return;
+    }
+
+    const nomorDuplikat = daftarOrderInput.find((row, index) => {
+      const adaDiInput = daftarOrderInput.findIndex((x) => x.noWo === row.noWo) !== index;
+      const adaDiOrders = orders.some((o) => o.noWo === row.noWo);
+      return adaDiInput || adaDiOrders;
+    });
+
+    if (nomorDuplikat) {
+      alert(`No. WO ${nomorDuplikat.noWo} duplikat atau sudah pernah dibuat.`);
+      return;
+    }
+
+    if (
+      formOrder.jenisPekerjaan.toUpperCase() === "NEW ODP" &&
+      formOrder.kmlFiles.length === 0
+    ) {
+      const lanjut = confirm("Jenis pekerjaan NEW ODP belum upload file KML/KMZ. Tetap buat order?");
+      if (!lanjut) return;
+    }
+
+    const orderBaru: Order[] = daftarOrderInput.map((item) => ({
       tanggal: hariIni(),
       jamOrder: jamSekarang(),
 
-      noWo: formOrder.noWo,
-      odp: formOrder.odp,
+      noWo: item.noWo,
+      odp: item.odp,
 
       teknisi1: t1.nama,
       nikTeknisi1: t1.nik,
@@ -645,7 +696,7 @@ function AppContent() {
 
       jenisPekerjaan: formOrder.jenisPekerjaan,
       status: "Baru",
-      catatan: formOrder.catatan,
+      catatan: [formOrder.catatan, item.catatan].filter(Boolean).join(" - "),
 
       dibuatOleh: currentUser?.nama || "Admin",
       nikPembuat: currentUser?.nik || "",
@@ -655,12 +706,12 @@ function AppContent() {
       fotoHasil: [],
       fotoPending: [],
       fotoKendala: [],
+      kmlFiles: formOrder.jenisPekerjaan.toUpperCase() === "NEW ODP" ? formOrder.kmlFiles : [],
       keteranganPending: "",
       keteranganKendala: "",
-    };
+    }));
 
-    const nextOrders = [data, ...orders];
-    setOrders(nextOrders);
+    setOrders([...orderBaru, ...orders]);
 
     setFormOrder({
       noWo: "",
@@ -669,11 +720,15 @@ function AppContent() {
       teknisi2Id: 0,
       jenisPekerjaan: "",
       catatan: "",
+      kmlFiles: [],
+      multiOrderText: "",
     });
 
-    await kirimNotifOrderTelegram(data);
+    for (const order of orderBaru) {
+      await kirimNotifOrderTelegram(order);
+    }
 
-    alert("Order berhasil dibuat.");
+    alert(`${orderBaru.length} order berhasil dibuat. Jangan lupa Upload Order ke Google Sheet di menu Rekap.`);
   }
 
   async function kirimNotifOrderTelegram(order: Order) {
@@ -681,10 +736,8 @@ function AppContent() {
       return;
     }
 
-    if (!order.telegramChatIdTeknisi1 && !order.telegramChatIdTeknisi2) {
-      return;
-    }
-
+    // Tetap kirim ke Apps Script walaupun Telegram Chat ID teknisi kosong,
+    // supaya notifikasi grup tetap masuk.
     try {
       await fetch(GOOGLE_SCRIPT_URL, {
         method: "POST",
@@ -1781,6 +1834,7 @@ function AppContent() {
                     <p>Foto Kendala: {order.fotoKendala.length}</p>
                     <p>Foto Lapangan: {order.fotoLapangan.length}</p>
                     <p>Foto Hasil: {order.fotoHasil.length}</p>
+                    <p>File KML/KMZ: {order.kmlFiles?.length || 0}</p>
                     <p>Catatan: {order.catatan || "-"}</p>
 
                     {order.status === "Selesai" && (
@@ -1804,17 +1858,12 @@ function AppContent() {
                 onChange={(e) =>
                   setFormOrder({ ...formOrder, noWo: e.target.value })
                 }
-                placeholder="Contoh: 1234567890"
+                placeholder="Contoh: 1234567890. Kosongkan jika pakai Multi Create Order."
               />
 
-              <label>ODP</label>
-              <input
-                value={formOrder.odp}
-                onChange={(e) =>
-                  setFormOrder({ ...formOrder, odp: e.target.value })
-                }
-                placeholder="Contoh: ODP-CTD-FAM"
-              />
+              <p className="info-text">
+                Kosongkan No. WO atas jika pakai Multi Create Order. ODP tidak dipakai.
+              </p>
 
               <label>Teknisi 1</label>
               <select
@@ -1852,12 +1901,47 @@ function AppContent() {
               </select>
 
               <label>Jenis Pekerjaan</label>
-              <input
+              <select
                 value={formOrder.jenisPekerjaan}
                 onChange={(e) =>
                   setFormOrder({ ...formOrder, jenisPekerjaan: e.target.value })
                 }
-                placeholder="Contoh: EXPAND, NEW ODP"
+              >
+                <option value="">Pilih jenis pekerjaan</option>
+                <option value="EXPAND">EXPAND</option>
+                <option value="NEW ODP">NEW ODP</option>
+              </select>
+
+              {formOrder.jenisPekerjaan.toUpperCase() === "NEW ODP" && (
+                <>
+                  <label>Upload File KML/KMZ untuk NEW ODP</label>
+                  <input
+                    type="file"
+                    accept=".kml,.kmz,application/vnd.google-earth.kml+xml,application/vnd.google-earth.kmz"
+                    multiple
+                    onChange={async (e) =>
+                      setFormOrder({
+                        ...formOrder,
+                        kmlFiles: await bacaBanyakFoto(e.target.files),
+                      })
+                    }
+                  />
+                  <p className="info-text">
+                    File KML/KMZ akan ikut tersimpan di folder foto order saat Upload Order ke Google Sheet.
+                  </p>
+                  {formOrder.kmlFiles.length > 0 && (
+                    <p>File KML/KMZ dipilih: {formOrder.kmlFiles.map((f) => f.name).join(", ")}</p>
+                  )}
+                </>
+              )}
+
+              <label>Multi Create Order</label>
+              <textarea
+                value={formOrder.multiOrderText}
+                onChange={(e) =>
+                  setFormOrder({ ...formOrder, multiOrderText: e.target.value })
+                }
+                placeholder={"Opsional. Untuk banyak order isi 1 No. WO per baris:\n11851944\n11852660\n11852661"}
               />
 
               <label>Catatan</label>
@@ -2104,6 +2188,7 @@ function AppContent() {
                     <p>Foto Kendala: {order.fotoKendala.length}</p>
                     <p>Foto Lapangan: {order.fotoLapangan.length}</p>
                     <p>Foto Hasil: {order.fotoHasil.length}</p>
+                    <p>File KML/KMZ: {order.kmlFiles?.length || 0}</p>
                     {order.checkinMapUrl && (
                       <p>
                         <a href={order.checkinMapUrl} target="_blank">
