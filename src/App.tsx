@@ -189,6 +189,18 @@ function buatCSV(namaFile: string, header: string, isi: string) {
   URL.revokeObjectURL(url);
 }
 
+
+function namaFileDenganNoWo(noWo: string, fileName: string) {
+  const cleanWo = String(noWo || "NO_WO").trim().replace(/[\\/:*?"<>|#%{}~&]/g, "_");
+  const cleanName = String(fileName || "file.kml").trim().replace(/[\\/:*?"<>|#%{}~&]/g, "_");
+
+  if (cleanName.startsWith(cleanWo + "_")) {
+    return cleanName;
+  }
+
+  return `${cleanWo}_${cleanName}`;
+}
+
 function bacaBanyakFoto(files: FileList | null): Promise<FotoItem[]> {
   if (!files || files.length === 0) return Promise.resolve([]);
 
@@ -708,7 +720,13 @@ function AppContent() {
       fotoHasil: [],
       fotoPending: [],
       fotoKendala: [],
-      kmlFiles: formOrder.jenisPekerjaan.toUpperCase() === "NEW ODP" ? formOrder.kmlFiles : [],
+      kmlFiles:
+        formOrder.jenisPekerjaan.toUpperCase() === "NEW ODP"
+          ? formOrder.kmlFiles.map((file) => ({
+              ...file,
+              name: namaFileDenganNoWo(item.noWo, file.name),
+            }))
+          : [],
       linkFolderFoto: "",
       keteranganPending: "",
       keteranganKendala: "",
